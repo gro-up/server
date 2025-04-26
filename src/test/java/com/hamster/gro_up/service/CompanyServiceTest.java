@@ -81,7 +81,7 @@ class CompanyServiceTest {
     @DisplayName("기업 수정에 성공한다")
     void updateCompany_success() {
         // given
-        long companyId = 1L;
+        long companyId = 10L;
         CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "www.new.com", "busan");
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
