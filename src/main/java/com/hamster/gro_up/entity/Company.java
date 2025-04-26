@@ -35,4 +35,11 @@ public class Company extends BaseEntity {
         this.location = location;
         this.user = user;
     }
+
+    public void update(String companyName, String position, String location, String url) {
+        this.companyName = companyName;
+        this.position = position;
+        this.location = location;
+        this.url = url;
+    }
 }
