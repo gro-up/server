@@ -6,6 +6,11 @@ import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.exception.BadRequestException;
+import com.hamster.gro_up.exception.ForbiddenException;
+import com.hamster.gro_up.exception.UnauthorizedException;
+import com.hamster.gro_up.exception.company.CompanyNotFoundException;
+import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.repository.CompanyRepository;
 import com.hamster.gro_up.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +27,7 @@ public class CompanyService {
 
     public CompanyResponse findCompany(AuthUser authUser, Long companyId) {
 
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("해당 기업을 찾을 수 없습니다."));
+        Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
         validateOwner(authUser, company);
 
@@ -32,7 +37,7 @@ public class CompanyService {
     @Transactional
     public CompanyResponse createCompany(AuthUser authUser, CompanyCreateRequest companyCreateRequest) {
 
-        User user = userRepository.findById(authUser.getId()).orElseThrow(() -> new RuntimeException("해당 사용자를 찾을 수 없습니다."));
+        User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
 
         Company company = Company.builder()
                 .user(user)
@@ -50,7 +55,7 @@ public class CompanyService {
     @Transactional
     public void updateCompany(AuthUser authUser, Long companyId, CompanyUpdateRequest companyUpdateRequest) {
 
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("해당 기업을 찾을 수 없습니다."));
+        Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
         validateOwner(authUser, company);
 
@@ -64,7 +69,7 @@ public class CompanyService {
     @Transactional
     public void deleteCompany(AuthUser authUser, Long companyId) {
 
-        Company company = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("해당 기업을 찾을 수 없습니다."));
+        Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
         validateOwner(authUser, company);
 
@@ -73,7 +78,7 @@ public class CompanyService {
 
     public void validateOwner(AuthUser authUser, Company company) {
         if (!company.getUser().getId().equals(authUser.getId())) {
-            throw new RuntimeException("잘못된 요청입니다.");
+            throw new ForbiddenException("해당 리소스에 접근할 권한이 없습니다.");
         }
     }
 
