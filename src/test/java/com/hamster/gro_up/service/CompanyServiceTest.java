@@ -7,6 +7,8 @@ import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.exception.ForbiddenException;
+import com.hamster.gro_up.exception.company.CompanyNotFoundException;
 import com.hamster.gro_up.repository.CompanyRepository;
 import com.hamster.gro_up.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,12 +80,41 @@ class CompanyServiceTest {
     }
 
     @Test
+    @DisplayName("기업 조회에 성공한다")
+    void findCompany_success() {
+        // given
+        Long companyId = 1L;
+        given(companyRepository.findById(companyId)).willReturn(Optional.of(company));
+
+        // when
+        CompanyResponse companyResponse = companyService.findCompany(authUser, companyId);
+
+        // then
+        assertThat(companyResponse.getCompanyName()).isEqualTo("ham-corp");
+        assertThat(companyResponse.getPosition()).isEqualTo("back-end");
+        assertThat(companyResponse.getUrl()).isEqualTo("www.ham.com");
+        assertThat(companyResponse.getLocation()).isEqualTo("seoul");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 회사 조회 시 예외가 발생한다")
+    void findCompany_fail_notExist() {
+        // given
+        long companyId = 999L;
+        given(companyRepository.findById(companyId)).willReturn(Optional.empty());
+
+        // when & then
+        CompanyNotFoundException exception = assertThrows(CompanyNotFoundException.class, () -> companyService.findCompany(authUser, companyId));
+        assertThat(exception.getMessage()).isEqualTo("해당 기업을 찾을 수 없습니다.");
+    }
+
+    @Test
     @DisplayName("기업 수정에 성공한다")
     void updateCompany_success() {
         // given
         long companyId = 10L;
         CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "www.new.com", "busan");
-        given(companyRepository.findById(10L)).willReturn(Optional.of(company));
+        given(companyRepository.findById(companyId)).willReturn(Optional.of(company));
 
         // when
         companyService.updateCompany(authUser, companyId, updateRequest);
@@ -104,10 +135,10 @@ class CompanyServiceTest {
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(ForbiddenException.class, () -> {
             companyService.updateCompany(otherAuthUser, 10L, updateRequest);
         });
-        assertThat(exception.getMessage()).isEqualTo("잘못된 요청입니다.");
+        assertThat(exception.getMessage()).isEqualTo("해당 리소스에 접근할 권한이 없습니다.");
     }
 
     @Test
@@ -131,9 +162,9 @@ class CompanyServiceTest {
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
         // when & then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(ForbiddenException.class, () -> {
             companyService.deleteCompany(otherAuthUser, 10L);
         });
-        assertThat(exception.getMessage()).isEqualTo("잘못된 요청입니다.");
+        assertThat(exception.getMessage()).isEqualTo("해당 리소스에 접근할 권한이 없습니다.");
     }
 }
