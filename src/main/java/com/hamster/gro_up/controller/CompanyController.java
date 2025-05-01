@@ -26,6 +26,12 @@ public class CompanyController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<CompanyListResponse>> findAllCompany(@AuthenticationPrincipal AuthUser authUser) {
+        CompanyListResponse response = companyService.findAllCompany(authUser);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(@AuthenticationPrincipal AuthUser authUser, @RequestBody CompanyCreateRequest companyCreateRequest) {
         CompanyResponse response = companyService.createCompany(authUser, companyCreateRequest);
