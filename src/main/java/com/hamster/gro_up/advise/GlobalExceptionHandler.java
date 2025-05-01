@@ -7,6 +7,7 @@ import com.hamster.gro_up.exception.NotFoundException;
 import com.hamster.gro_up.exception.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,63 +19,57 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadRequestException.class)
-    public ApiResponse<Object> handleBadRequestException(BadRequestException e) {
+    public ResponseEntity<ApiResponse<Object>> handleBadRequestException(BadRequestException e) {
         log.error(e.getMessage());
-        
-        return ApiResponse.of(
-                HttpStatus.BAD_REQUEST,
-                e.getMessage(),
-                null
-        );
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
 
     @ExceptionHandler(UnauthorizedException.class)
-    public ApiResponse<Object> handleAuthenticationException(UnauthorizedException e) {
+    public ResponseEntity<ApiResponse<Object>> handleAuthenticationException(UnauthorizedException e) {
         log.error(e.getMessage());
-        
-        return ApiResponse.of(
-                HttpStatus.UNAUTHORIZED,
-                e.getMessage(),
-                null
-        );
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ApiResponse<Object> handleForbiddenException(ForbiddenException e) {
+    public ResponseEntity<ApiResponse<Object>> handleForbiddenException(ForbiddenException e) {
         log.error(e.getMessage());
 
-        return ApiResponse.of(
-                HttpStatus.FORBIDDEN,
-                e.getMessage(),
-                null
-        );
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
 
     @ExceptionHandler(NotFoundException.class)
-    public ApiResponse<Object> handleNotFoundException(NotFoundException e) {
+    public ResponseEntity<ApiResponse<Object>> handleNotFoundException(NotFoundException e) {
         log.error(e.getMessage());
 
-        return ApiResponse.of(
-                HttpStatus.NOT_FOUND,
-                e.getMessage(),
-                null
-        );
+        HttpStatus status = HttpStatus.NOT_FOUND;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)
-    public ApiResponse<Object> handleException(Exception e) {
+    public ResponseEntity<ApiResponse<Object>> handleException(Exception e) {
         log.error("Unhandled exception", e);
 
-        return ApiResponse.of(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "서버 오류가 발생했습니다.",
-                null
-        );
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ApiResponse<Object> handleValidationException(MethodArgumentNotValidException e) {
+    public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException e) {
+        log.error(e.getMessage());
+
         BindingResult bindingResult = e.getBindingResult();
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
 
         StringBuilder sb = new StringBuilder();
         for (FieldError fieldError : bindingResult.getFieldErrors()) {
@@ -87,10 +82,6 @@ public class GlobalExceptionHandler {
             sb.append("]");
         }
 
-        return ApiResponse.of(
-                HttpStatus.BAD_REQUEST,
-                sb.toString(),
-                null
-        );
+        return ResponseEntity.status(status).body(ApiResponse.of(status, sb.toString(), null));
     }
 }

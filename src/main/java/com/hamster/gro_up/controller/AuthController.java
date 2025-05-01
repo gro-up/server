@@ -6,6 +6,7 @@ import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,14 +20,14 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ApiResponse<TokenResponse> signup(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<ApiResponse<TokenResponse>> signup(@RequestBody SignupRequest signupRequest) {
         TokenResponse response = authService.signup(signupRequest);
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping("/siginin")
-    public ApiResponse<TokenResponse> signin(@RequestBody SigninRequest signinRequest) {
+    public ResponseEntity<ApiResponse<TokenResponse>> signin(@RequestBody SigninRequest signinRequest) {
         TokenResponse response = authService.signin(signinRequest);
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
