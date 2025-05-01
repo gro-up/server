@@ -8,6 +8,8 @@ import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Role;
+import com.hamster.gro_up.exception.NotFoundException;
+import com.hamster.gro_up.exception.company.CompanyNotFoundException;
 import com.hamster.gro_up.service.CompanyService;
 import com.hamster.gro_up.service.CustomOAuth2UserService;
 import com.hamster.gro_up.util.JwtUtil;
@@ -76,7 +78,7 @@ class CompanyControllerTest {
         mockMvc.perform(post("/api/companies")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("code").value(201))
                 .andExpect(jsonPath("$.status").value("CREATED"))
                 .andExpect(jsonPath("$.message").value("CREATED"))
@@ -108,5 +110,20 @@ class CompanyControllerTest {
         // when & then
         mockMvc.perform(delete("/api/companies/10"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 기업 조회 시 예외가 발생한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    void findCompany_notFound() throws Exception {
+        // given
+        given(companyService.findCompany(any(), eq(999L)))
+                .willThrow(new CompanyNotFoundException());
+
+        // when & then
+        mockMvc.perform(get("/api/companies/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("해당 기업을 찾을 수 없습니다."));
     }
 }
