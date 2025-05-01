@@ -3,6 +3,7 @@ package com.hamster.gro_up.service;
 import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
+import com.hamster.gro_up.dto.response.CompanyListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.Role;
@@ -19,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -166,5 +168,50 @@ class CompanyServiceTest {
             companyService.deleteCompany(otherAuthUser, 10L);
         });
         assertThat(exception.getMessage()).isEqualTo("해당 리소스에 접근할 권한이 없습니다.");
+    }
+
+    @Test
+    @DisplayName("해당 사용자가 생성한 모든 기업을 조회한다")
+    void findAllCompany_success() {
+        // given
+        Company company2 = Company.builder()
+                .id(2L)
+                .companyName("ham-corp")
+                .position("back-end")
+                .url("www.ham.com")
+                .location("seoul")
+                .build();
+
+        Company company3 = Company.builder()
+                .id(3L)
+                .companyName("egg-corp")
+                .position("front-end")
+                .url("www.egg.com")
+                .location("busan")
+                .build();
+
+        List<Company> companyList = List.of(company2, company3);
+
+        given(companyRepository.findByUserId(authUser.getId())).willReturn(companyList);
+
+        // when
+        CompanyListResponse response = companyService.findAllCompany(authUser);
+
+        // then
+        assertThat(response.getCompanyList()).hasSize(2);
+        assertThat(response.getCompanyList()).extracting("companyName").containsExactlyInAnyOrder("ham-corp", "egg-corp");
+    }
+
+    @Test
+    @DisplayName("해당 유저가 소유한 기업이 없으면 빈 리스트를 반환한다")
+    void findAllCompany_empty() {
+        // given
+        given(companyRepository.findByUserId(authUser.getId())).willReturn(List.of());
+
+        // when
+        CompanyListResponse response = companyService.findAllCompany(authUser);
+
+        // then
+        assertThat(response.getCompanyList()).isEmpty();
     }
 }

@@ -3,12 +3,11 @@ package com.hamster.gro_up.service;
 import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
+import com.hamster.gro_up.dto.response.CompanyListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.User;
-import com.hamster.gro_up.exception.BadRequestException;
 import com.hamster.gro_up.exception.ForbiddenException;
-import com.hamster.gro_up.exception.UnauthorizedException;
 import com.hamster.gro_up.exception.company.CompanyNotFoundException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.repository.CompanyRepository;
@@ -16,6 +15,8 @@ import com.hamster.gro_up.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -32,6 +33,12 @@ public class CompanyService {
         validateOwner(authUser, company);
 
         return CompanyResponse.from(company);
+    }
+
+    public CompanyListResponse findAllCompany(AuthUser authUser) {
+        List<Company> companyList = companyRepository.findByUserId(authUser.getId());
+        List<CompanyResponse> responseList = companyList.stream().map(CompanyResponse::from).toList();
+        return CompanyListResponse.of(responseList);
     }
 
     @Transactional
