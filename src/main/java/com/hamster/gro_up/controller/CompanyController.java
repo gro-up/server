@@ -7,6 +7,7 @@ import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.service.CompanyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,22 +34,22 @@ public class CompanyController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(@AuthenticationPrincipal AuthUser authUser, @RequestBody CompanyCreateRequest companyCreateRequest) {
+    public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(@AuthenticationPrincipal AuthUser authUser, @Valid @RequestBody CompanyCreateRequest companyCreateRequest) {
         CompanyResponse response = companyService.createCompany(authUser, companyCreateRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(HttpStatus.CREATED, response));
     }
 
     @PutMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Void>> updateCompany(@AuthenticationPrincipal AuthUser authUser,
-                                           @PathVariable long companyId,
-                                           @RequestBody CompanyUpdateRequest companyUpdateRequest) {
+                                                           @PathVariable long companyId,
+                                                           @Valid @RequestBody CompanyUpdateRequest companyUpdateRequest) {
         companyService.updateCompany(authUser, companyId, companyUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @DeleteMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@AuthenticationPrincipal AuthUser authUser,
-                                           @PathVariable long companyId) {
+                                                           @PathVariable long companyId) {
         companyService.deleteCompany(authUser, companyId);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
