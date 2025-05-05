@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = { AuthController.class })
+@WebMvcTest(controllers = {AuthController.class})
 @Import({SecurityConfig.class, JwtUtil.class})
 class AuthControllerTest {
 
@@ -82,5 +82,26 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data.token").value(token.getToken()));
+    }
+
+    @Test
+    @DisplayName("필수값이 누락된 회원가입 요청 시 예외가 발생한다")
+    void signup_fail_validation() throws Exception {
+        // given
+        SignupRequest invalidRequest = new SignupRequest(
+                "",
+                "hamster",
+                "password123"
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 }
