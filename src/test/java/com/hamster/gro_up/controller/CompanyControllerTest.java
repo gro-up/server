@@ -168,4 +168,27 @@ class CompanyControllerTest {
                 .andExpect(jsonPath("$.data.companyList").isArray())
                 .andExpect(jsonPath("$.data.companyList").isEmpty());
     }
+
+    @Test
+    @DisplayName("필수값이 누락된 기업 등록 요청 시 예외가 발생한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    void createCompany_fail_validation() throws Exception {
+        // given
+        CompanyCreateRequest invalidRequest = new CompanyCreateRequest(
+                "",
+                "",
+                "",
+                ""
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/companies")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
 }
