@@ -74,7 +74,7 @@ class AuthControllerTest {
         given(authService.signin(any(SigninRequest.class))).willReturn(token);
 
         // when & then
-        mockMvc.perform(post("/api/auth/siginin")
+        mockMvc.perform(post("/api/auth/signin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(signinRequest))
                         .with(csrf()))
@@ -93,7 +93,7 @@ class AuthControllerTest {
                 "hamster",
                 "password123"
         );
-
+        
         // when & then
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
