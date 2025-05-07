@@ -54,7 +54,7 @@ public class CompanyController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "기엽 삭제")
+    @Operation(summary = "기업 삭제")
     @DeleteMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@AuthenticationPrincipal AuthUser authUser,
                                                            @PathVariable long companyId) {
