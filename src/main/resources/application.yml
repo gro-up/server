@@ -13,7 +13,7 @@ spring:
         format_sql: true
         show_sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
   security:
     oauth2:
       client:
@@ -25,6 +25,11 @@ spring:
             scope:
               - profile
               - email
+  flyway:
+    enabled: true
+    url: ${LOCAL_DB_URL}
+    user: root # MySQL 사용자 이름
+    password: ${LOCAL_DB_PASSWORD}
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}  # JWT 비밀 키
