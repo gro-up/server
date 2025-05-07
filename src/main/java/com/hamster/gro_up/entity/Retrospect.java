@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Retrospect extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String memo;
