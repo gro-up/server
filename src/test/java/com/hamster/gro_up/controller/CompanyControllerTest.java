@@ -1,9 +1,7 @@
 package com.hamster.gro_up.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hamster.gro_up.config.CustomOAuth2SuccessHandler;
-import com.hamster.gro_up.config.SecurityConfig;
-import com.hamster.gro_up.config.WithMockAuthUser;
+import com.hamster.gro_up.config.*;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
@@ -50,6 +48,12 @@ class CompanyControllerTest {
 
     @MockBean
     private CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
+    @MockBean
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @MockBean
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Test
     @DisplayName("기업 조회에 성공한다")
