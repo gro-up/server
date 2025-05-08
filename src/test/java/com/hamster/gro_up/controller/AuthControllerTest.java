@@ -1,6 +1,8 @@
 package com.hamster.gro_up.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hamster.gro_up.config.CustomAccessDeniedHandler;
+import com.hamster.gro_up.config.CustomAuthenticationEntryPoint;
 import com.hamster.gro_up.config.CustomOAuth2SuccessHandler;
 import com.hamster.gro_up.config.SecurityConfig;
 import com.hamster.gro_up.dto.request.SigninRequest;
@@ -44,6 +46,12 @@ class AuthControllerTest {
 
     @MockBean
     private CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
+    @MockBean
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @MockBean
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Test
     @DisplayName("회원가입에 성공하면 토큰을 반환한다")
