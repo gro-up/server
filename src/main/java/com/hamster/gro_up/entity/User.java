@@ -11,10 +11,12 @@ import lombok.NoArgsConstructor;
 @Entity
 public class User {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String email;
+
+    private String password;
 
     private String name;
 
@@ -22,9 +24,10 @@ public class User {
     private Role role;
 
     @Builder
-    public User(Long id, String email, String name, Role role) {
+    public User(Long id, String email, String password, String name, Role role) {
         this.id = id;
         this.email = email;
+        this.password = password;
         this.name = name;
         this.role = role;
     }

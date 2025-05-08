@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 public class Schedule extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)

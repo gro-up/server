@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Company extends BaseEntity {
 
-    @Id @GeneratedValue
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String companyName;
@@ -34,5 +34,12 @@ public class Company extends BaseEntity {
         this.url = url;
         this.location = location;
         this.user = user;
+    }
+
+    public void update(String companyName, String position, String location, String url) {
+        this.companyName = companyName;
+        this.position = position;
+        this.location = location;
+        this.url = url;
     }
 }
