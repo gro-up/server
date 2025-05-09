@@ -48,6 +48,9 @@ dependencies {
 
 	// flyway
 	implementation 'org.flywaydb:flyway-mysql'
+
+	// mail
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

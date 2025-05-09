@@ -25,6 +25,15 @@ spring:
             scope:
               - profile
               - email
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.timeout: 5000
   flyway:
     enabled: true
     url: ${LOCAL_DB_URL}

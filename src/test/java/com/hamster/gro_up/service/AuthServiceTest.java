@@ -10,7 +10,6 @@ import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.repository.UserRepository;
 import com.hamster.gro_up.util.JwtUtil;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.any;
@@ -34,6 +33,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -71,6 +73,7 @@ class AuthServiceTest {
         given(passwordEncoder.encode(signupRequest.getPassword())).willReturn("encoded_password");
         given(userRepository.save(any(User.class))).willReturn(user);
         given(jwtUtil.createToken(anyLong(), anyString(), anyString(), any(Role.class))).willReturn("token");
+        given(emailVerificationService.isEmailVerified(signupRequest.getEmail())).willReturn(true);
 
         // when
         TokenResponse response = authService.signup(signupRequest);
