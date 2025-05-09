@@ -55,7 +55,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
-            docker stop gro-up-server || true
-            docker rm gro-up-server || true
-            docker pull ${{ steps.login-ecr.outputs.registry }}/gro-up-server:latest
-            docker run -d --name gro-up-server -p 80:8080 -e SPRING_PROFILES_ACTIVE=prod ${{ steps.login-ecr.outputs.registry }}/gro-up-server:latest
+            cd /home/ubuntu/app
+            docker-compose pull springboot
+            docker-compose up -d
+            docker image prune -f
