@@ -5,6 +5,7 @@ import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.exception.auth.EmailNotVerifiedException;
 import com.hamster.gro_up.exception.auth.InvalidCredentialsException;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
@@ -22,6 +23,7 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final EmailVerificationService emailVerificationService;
     private final JwtUtil jwtUtil;
 
     @Transactional
@@ -29,6 +31,10 @@ public class AuthService {
 
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new DuplicateUserException();
+        }
+
+        if(!emailVerificationService.isEmailVerified(signupRequest.getEmail())) {
+            throw new EmailNotVerifiedException();
         }
 
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
