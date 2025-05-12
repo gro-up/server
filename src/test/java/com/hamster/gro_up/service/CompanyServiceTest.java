@@ -106,7 +106,8 @@ class CompanyServiceTest {
         given(companyRepository.findById(companyId)).willReturn(Optional.empty());
 
         // when & then
-        CompanyNotFoundException exception = assertThrows(CompanyNotFoundException.class, () -> companyService.findCompany(authUser, companyId));
+        CompanyNotFoundException exception = assertThrows(CompanyNotFoundException.class,
+                () -> companyService.findCompany(authUser, companyId));
         assertThat(exception.getMessage()).isEqualTo("해당 기업을 찾을 수 없습니다.");
     }
 
@@ -172,7 +173,7 @@ class CompanyServiceTest {
 
     @Test
     @DisplayName("해당 사용자가 생성한 모든 기업을 조회한다")
-    void findAllCompany_success() {
+    void findAllCompanies_success() {
         // given
         Company company2 = Company.builder()
                 .id(2L)
@@ -195,7 +196,7 @@ class CompanyServiceTest {
         given(companyRepository.findByUserId(authUser.getId())).willReturn(companyList);
 
         // when
-        CompanyListResponse response = companyService.findAllCompany(authUser);
+        CompanyListResponse response = companyService.findAllCompanies(authUser);
 
         // then
         assertThat(response.getCompanyList()).hasSize(2);
@@ -204,12 +205,12 @@ class CompanyServiceTest {
 
     @Test
     @DisplayName("해당 유저가 소유한 기업이 없으면 빈 리스트를 반환한다")
-    void findAllCompany_empty() {
+    void findAllCompanies_empty() {
         // given
         given(companyRepository.findByUserId(authUser.getId())).willReturn(List.of());
 
         // when
-        CompanyListResponse response = companyService.findAllCompany(authUser);
+        CompanyListResponse response = companyService.findAllCompanies(authUser);
 
         // then
         assertThat(response.getCompanyList()).isEmpty();

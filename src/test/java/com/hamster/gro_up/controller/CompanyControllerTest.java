@@ -120,7 +120,7 @@ class CompanyControllerTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 기업 조회 시 예외가 발생한다")
+    @DisplayName("존재하지 않는 기업 조회 시 404를 반환한다")
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
     void findCompany_notFound() throws Exception {
         // given
@@ -137,12 +137,12 @@ class CompanyControllerTest {
     @Test
     @DisplayName("기업 목록 조회에 성공한다")
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
-    void findAllCompany_success() throws Exception {
+    void findAllCompanies_success() throws Exception {
         // given
-        CompanyResponse company1 = new CompanyResponse(1L, "ham-corp", "back-end", "www.ham.com", "seoul");
-        CompanyResponse company2 = new CompanyResponse(2L, "egg-corp", "front-end", "www.egg.com", "busan");
+        CompanyResponse company1 = new CompanyResponse(1L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
+        CompanyResponse company2 = new CompanyResponse(2L, "egg-corp", "front-end", "www.egg.com", "busan", LocalDateTime.now(), LocalDateTime.now());
         CompanyListResponse companyListResponse = CompanyListResponse.of(List.of(company1, company2));
-        given(companyService.findAllCompany(any())).willReturn(companyListResponse);
+        given(companyService.findAllCompanies(any())).willReturn(companyListResponse);
 
         // when & then
         mockMvc.perform(get("/api/companies"))
@@ -160,10 +160,10 @@ class CompanyControllerTest {
     @Test
     @DisplayName("기업 목록 조회 시 하나도 없을 때 빈 리스트가 반환된다")
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
-    void findAllCompany_empty() throws Exception {
+    void findAllCompanies_empty() throws Exception {
         // given
         CompanyListResponse emptyResponse = CompanyListResponse.of(List.of());
-        given(companyService.findAllCompany(any())).willReturn(emptyResponse);
+        given(companyService.findAllCompanies(any())).willReturn(emptyResponse);
 
         // when & then
         mockMvc.perform(get("/api/companies"))
