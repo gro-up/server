@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -60,7 +61,7 @@ class CompanyControllerTest {
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
     void findCompany_success() throws Exception {
         // given
-        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul");
+        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
         given(companyService.findCompany(any(), eq(10L))).willReturn(response);
 
         // when & then
@@ -78,7 +79,7 @@ class CompanyControllerTest {
     void createCompany_success() throws Exception {
         // given
         CompanyCreateRequest request = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul");
-        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul");
+        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
         given(companyService.createCompany(any(), any())).willReturn(response);
 
         // when & then
