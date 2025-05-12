@@ -43,4 +43,9 @@ public class Schedule extends BaseEntity {
         this.company = company;
         this.user = user;
     }
+    public void validateOwner(Long userId) {
+        if(!this.user.getId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+    }
 }

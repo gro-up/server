@@ -1,5 +1,6 @@
 package com.hamster.gro_up.entity;
 
+import com.hamster.gro_up.exception.ForbiddenException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -41,5 +42,11 @@ public class Company extends BaseEntity {
         this.position = position;
         this.location = location;
         this.url = url;
+    }
+
+    public void validateOwner(Long userId) {
+        if(!this.user.getId().equals(userId)) {
+            throw new ForbiddenException();
+        }
     }
 }
