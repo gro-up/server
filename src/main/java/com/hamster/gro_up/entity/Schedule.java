@@ -1,5 +1,6 @@
 package com.hamster.gro_up.entity;
 
+import com.hamster.gro_up.exception.ForbiddenException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -42,5 +43,18 @@ public class Schedule extends BaseEntity {
         this.memo = memo;
         this.company = company;
         this.user = user;
+    }
+
+    public void update(LocalDateTime dueDate, String memo, String position, Step step) {
+        this.dueDate = dueDate;
+        this.memo = memo;
+        this.position = position;
+        this.step = step;
+    }
+
+    public void validateOwner(Long userId) {
+        if(!this.user.getId().equals(userId)) {
+            throw new ForbiddenException();
+        }
     }
 }

@@ -33,8 +33,8 @@ public class CompanyController {
 
     @Operation(summary = "해당 사용자의 모든 기업 조회")
     @GetMapping
-    public ResponseEntity<ApiResponse<CompanyListResponse>> findAllCompany(@AuthenticationPrincipal AuthUser authUser) {
-        CompanyListResponse response = companyService.findAllCompany(authUser);
+    public ResponseEntity<ApiResponse<CompanyListResponse>> findAllCompanies(@AuthenticationPrincipal AuthUser authUser) {
+        CompanyListResponse response = companyService.findAllCompanies(authUser);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

@@ -7,7 +7,6 @@ import com.hamster.gro_up.dto.response.CompanyListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.User;
-import com.hamster.gro_up.exception.ForbiddenException;
 import com.hamster.gro_up.exception.company.CompanyNotFoundException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.repository.CompanyRepository;
@@ -27,23 +26,23 @@ public class CompanyService {
     private final UserRepository userRepository;
 
     public CompanyResponse findCompany(AuthUser authUser, Long companyId) {
-
         Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
-        validateOwner(authUser, company);
+        company.validateOwner(authUser.getId());
 
         return CompanyResponse.from(company);
     }
 
-    public CompanyListResponse findAllCompany(AuthUser authUser) {
+    public CompanyListResponse findAllCompanies(AuthUser authUser) {
         List<Company> companyList = companyRepository.findByUserId(authUser.getId());
+
         List<CompanyResponse> responseList = companyList.stream().map(CompanyResponse::from).toList();
+
         return CompanyListResponse.of(responseList);
     }
 
     @Transactional
     public CompanyResponse createCompany(AuthUser authUser, CompanyCreateRequest companyCreateRequest) {
-
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
 
         Company company = Company.builder()
@@ -61,10 +60,9 @@ public class CompanyService {
 
     @Transactional
     public void updateCompany(AuthUser authUser, Long companyId, CompanyUpdateRequest companyUpdateRequest) {
-
         Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
-        validateOwner(authUser, company);
+        company.validateOwner(authUser.getId());
 
         company.update(companyUpdateRequest.getCompanyName(),
                 companyUpdateRequest.getPosition(),
@@ -75,18 +73,10 @@ public class CompanyService {
 
     @Transactional
     public void deleteCompany(AuthUser authUser, Long companyId) {
-
         Company company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
 
-        validateOwner(authUser, company);
+        company.validateOwner(authUser.getId());
 
         companyRepository.delete(company);
     }
-
-    public void validateOwner(AuthUser authUser, Company company) {
-        if (!company.getUser().getId().equals(authUser.getId())) {
-            throw new ForbiddenException("해당 리소스에 접근할 권한이 없습니다.");
-        }
-    }
-
 }
