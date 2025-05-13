@@ -74,7 +74,7 @@ class ScheduleServiceTest {
                 .memo("메모입니다")
                 .build();
 
-        authUser = new AuthUser(1L, "ham@gmail.com", "ham", Role.ROLE_USER);
+        authUser = new AuthUser(1L, "ham@gmail.com", Role.ROLE_USER);
     }
 
     @Test
@@ -111,7 +111,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 조회 시 소유자가 아니면 예외가 발생한다")
     void findSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", "other", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
         given(scheduleRepository.findByIdWithCompany(schedule.getId())).willReturn(Optional.of(schedule));
 
         // when & then
@@ -189,7 +189,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 생성 시 소유자가 아니면 예외가 발생한다")
     void createSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", "other", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 schedule.getStep(),
@@ -231,7 +231,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 수정 시 소유자가 아니면 예외가 발생한다")
     void updateSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", "other", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
                 Step.DOCUMENT, LocalDateTime.now(), "백엔드", "메모 수정"
         );
@@ -260,7 +260,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 삭제 시 소유자가 아니면 예외가 발생한다")
     void deleteSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", "other", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
         given(scheduleRepository.findById(schedule.getId())).willReturn(Optional.of(schedule));
 
         // when & then

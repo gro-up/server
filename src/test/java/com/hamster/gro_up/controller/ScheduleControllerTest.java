@@ -59,7 +59,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("일정 단건 조회에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findSchedule_success() throws Exception {
         // given
         ScheduleResponse response = new ScheduleResponse(
@@ -79,7 +79,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("존재하지 않는 일정 조회 시 404를 반환한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findSchedule_notFound() throws Exception {
         // given
         given(scheduleService.findSchedule(any(), eq(999L)))
@@ -94,7 +94,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("해당 사용자의 모든 일정 조회에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findAllSchedules_success() throws Exception {
         // given
         ScheduleResponse schedule1 = new ScheduleResponse(
@@ -121,7 +121,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("일정 생성에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void createSchedule_success() throws Exception {
         // given
         ScheduleCreateRequest request = new ScheduleCreateRequest(
@@ -146,7 +146,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("일정 수정에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void updateSchedule_success() throws Exception {
         // given
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
@@ -163,7 +163,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("일정 삭제에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void deleteSchedule_success() throws Exception {
         // given
         willDoNothing().given(scheduleService).deleteSchedule(any(), eq(100L));
@@ -175,7 +175,7 @@ class ScheduleControllerTest {
 
     @Test
     @DisplayName("일정 목록이 비어 있을 때 빈 리스트가 반환된다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findAllSchedules_empty() throws Exception {
         // given
         ScheduleListResponse emptyResponse = ScheduleListResponse.of(List.of());
