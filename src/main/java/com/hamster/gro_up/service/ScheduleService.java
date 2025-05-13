@@ -46,20 +46,31 @@ public class ScheduleService {
     }
 
     @Transactional
-    public ScheduleResponse createSchedule(AuthUser authUser, ScheduleCreateRequest scheduleCreateRequest) {
-        Company company = companyRepository.findById(scheduleCreateRequest.getCompanyId()).orElseThrow(CompanyNotFoundException::new);
+    public ScheduleResponse createSchedule(AuthUser authUser, ScheduleCreateRequest request) {
+        Company company = null;
+        String companyName;
 
-        company.validateOwner(authUser.getId());
+        if(request.getCompanyId() != null) {
+            company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(CompanyNotFoundException::new);
+
+            company.validateOwner(authUser.getId());
+
+            companyName = company.getCompanyName();
+        }else {
+            companyName = request.getCompanyName();
+        }
 
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
 
         Schedule schedule = Schedule.builder()
                 .user(user)
                 .company(company)
-                .dueDate(scheduleCreateRequest.getDueDate())
-                .step(scheduleCreateRequest.getStep())
-                .position(scheduleCreateRequest.getPosition())
-                .memo(scheduleCreateRequest.getMemo())
+                .companyName(companyName)
+                .dueDate(request.getDueDate())
+                .step(request.getStep())
+                .position(request.getPosition())
+                .memo(request.getMemo())
                 .build();
 
         Schedule savedSchedule = scheduleRepository.save(schedule);

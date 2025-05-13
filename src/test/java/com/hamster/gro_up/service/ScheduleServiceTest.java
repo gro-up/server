@@ -164,6 +164,7 @@ class ScheduleServiceTest {
         // given
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
+                company.getCompanyName(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -192,6 +193,7 @@ class ScheduleServiceTest {
         AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
+                company.getCompanyName(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),

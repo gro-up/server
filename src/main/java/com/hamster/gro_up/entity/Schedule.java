@@ -26,22 +26,25 @@ public class Schedule extends BaseEntity {
 
     private String memo;
 
-    @JoinColumn(name = "company_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT), updatable = false, nullable = false)
+    @JoinColumn(name = "company_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT))
     @ManyToOne(fetch = FetchType.LAZY)
     private Company company;
+
+    private String companyName;
 
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT), updatable = false, nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Builder
-    public Schedule(Long id, Step step, String position, LocalDateTime dueDate, String memo, Company company, User user) {
+    public Schedule(Long id, Step step, String position, LocalDateTime dueDate, String memo, Company company, String companyName, User user) {
         this.id = id;
         this.step = step;
         this.dueDate = dueDate;
         this.position = position;
         this.memo = memo;
         this.company = company;
+        this.companyName = companyName;
         this.user = user;
     }
 
@@ -50,6 +53,10 @@ public class Schedule extends BaseEntity {
         this.memo = memo;
         this.position = position;
         this.step = step;
+    }
+
+    public void updateCompanyName(String companyName) {
+        this.companyName = companyName;
     }
 
     public void validateOwner(Long userId) {
