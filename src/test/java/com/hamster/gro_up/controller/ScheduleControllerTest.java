@@ -125,7 +125,7 @@ class ScheduleControllerTest {
     void createSchedule_success() throws Exception {
         // given
         ScheduleCreateRequest request = new ScheduleCreateRequest(
-                10L, Step.DOCUMENT, LocalDateTime.now(), " 백엔드", "메모"
+                10L, "ham-corp", Step.DOCUMENT, LocalDateTime.now(), " 백엔드", "메모"
         );
         ScheduleResponse response = new ScheduleResponse(
                 10L, "ham-corp", "DOCUMENT", "백엔드", "메모",
@@ -187,5 +187,30 @@ class ScheduleControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.scheduleList").isArray())
                 .andExpect(jsonPath("$.data.scheduleList").isEmpty());
+    }
+
+    @Test
+    @DisplayName("필수값이 누락된 일정 생성 요청 시 400을 반환한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void createSchedule_fail_validation() throws Exception {
+        // given: companyName 이 null 또는 빈 문자열(필수값 누락)
+        ScheduleCreateRequest invalidRequest = new ScheduleCreateRequest(
+                null,           // companyId
+                "",             // companyName (NotBlank 위반)
+                null,           // step
+                null,           // dueDate
+                null,           // position
+                null            // memo
+        );
+
+        // when & then
+        mockMvc.perform(post("/api/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 }
