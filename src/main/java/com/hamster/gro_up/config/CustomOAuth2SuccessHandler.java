@@ -22,11 +22,11 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
+
         Long userId = customOAuth2User.getId();
         String email = customOAuth2User.getAttribute("email");
-        String name = customOAuth2User.getAttribute("name");
 
-        String token = jwtUtil.createToken(userId, email, name, Role.ROLE_USER);
+        String token = jwtUtil.createToken(userId, email, Role.ROLE_USER);
 
         response.setContentType("application/json");
         response.getWriter().write(token);

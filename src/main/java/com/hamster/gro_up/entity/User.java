@@ -18,17 +18,14 @@ public class User extends BaseEntity {
 
     private String password;
 
-    private String name;
-
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @Builder
-    public User(Long id, String email, String password, String name, Role role) {
+    public User(Long id, String email, String password, Role role) {
         this.id = id;
         this.email = email;
         this.password = password;
-        this.name = name;
         this.role = role;
     }
 }
