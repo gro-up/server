@@ -11,6 +11,5 @@ import java.lang.annotation.RetentionPolicy;
 public @interface WithMockAuthUser {
     long userId();
     String email();
-    String name();
     Role role();
 }

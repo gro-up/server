@@ -58,7 +58,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 조회에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findCompany_success() throws Exception {
         // given
         CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
@@ -75,7 +75,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 등록에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void createCompany_success() throws Exception {
         // given
         CompanyCreateRequest request = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul");
@@ -95,7 +95,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 수정에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void updateCompany_success() throws Exception {
         // given
         CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "www.new.com", "busan");
@@ -110,7 +110,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 삭제에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void deleteCompany_success() throws Exception {
         // given
         willDoNothing().given(companyService).deleteCompany(any(), eq(10L));
@@ -122,7 +122,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("존재하지 않는 기업 조회 시 404를 반환한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findCompany_notFound() throws Exception {
         // given
         given(companyService.findCompany(any(), eq(999L)))
@@ -137,7 +137,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 목록 조회에 성공한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findAllCompanies_success() throws Exception {
         // given
         CompanyResponse company1 = new CompanyResponse(1L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
@@ -160,7 +160,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("기업 목록 조회 시 하나도 없을 때 빈 리스트가 반환된다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findAllCompanies_empty() throws Exception {
         // given
         CompanyListResponse emptyResponse = CompanyListResponse.of(List.of());
@@ -176,7 +176,7 @@ class CompanyControllerTest {
 
     @Test
     @DisplayName("필수값이 누락된 기업 등록 요청 시 예외가 발생한다")
-    @WithMockAuthUser(userId = 1L, email = "ham@example.com", name = "ham", role = Role.ROLE_USER)
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void createCompany_fail_validation() throws Exception {
         // given
         CompanyCreateRequest invalidRequest = new CompanyCreateRequest(

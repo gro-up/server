@@ -41,13 +41,12 @@ public class AuthService {
 
         User user = User.builder()
                 .email(signupRequest.getEmail())
-                .name(signupRequest.getName())
                 .password(encodedPassword)
                 .role(Role.ROLE_USER)
                 .build();
 
         User savedUser = userRepository.save(user);
-        String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getName(), savedUser.getRole());
+        String bearerToken = jwtUtil.createToken(savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
 
         return new TokenResponse(bearerToken);
     }
@@ -60,7 +59,7 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
-        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getName(), user.getRole());
+        String bearerToken = jwtUtil.createToken(user.getId(), user.getEmail(), user.getRole());
 
         return new TokenResponse(bearerToken);
     }

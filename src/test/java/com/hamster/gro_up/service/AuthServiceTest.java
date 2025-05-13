@@ -52,14 +52,13 @@ class AuthServiceTest {
 
     @BeforeEach
     void setup() {
-        signupRequest = new SignupRequest("test@example.com", "test", "password");
+        signupRequest = new SignupRequest("test@example.com", "password");
         signinRequest = new SigninRequest("test@example.com", "testpw");
 
         user = User.builder()
                 .id(1L)
                 .email("test@test.com")
                 .password("password")
-                .name("ham")
                 .password("encoded_password")
                 .role(Role.ROLE_USER)
                 .build();
@@ -72,7 +71,7 @@ class AuthServiceTest {
         given(userRepository.existsByEmail(signupRequest.getEmail())).willReturn(false);
         given(passwordEncoder.encode(signupRequest.getPassword())).willReturn("encoded_password");
         given(userRepository.save(any(User.class))).willReturn(user);
-        given(jwtUtil.createToken(anyLong(), anyString(), anyString(), any(Role.class))).willReturn("token");
+        given(jwtUtil.createToken(anyLong(), anyString(), any(Role.class))).willReturn("token");
         given(emailVerificationService.isEmailVerified(signupRequest.getEmail())).willReturn(true);
 
         // when
@@ -101,7 +100,7 @@ class AuthServiceTest {
         // given
         given(userRepository.findByEmail(signinRequest.getEmail())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())).willReturn(true);
-        given(jwtUtil.createToken(anyLong(), anyString(), anyString(), any(Role.class))).willReturn("token");
+        given(jwtUtil.createToken(anyLong(), anyString(), any(Role.class))).willReturn("token");
 
         // when
         TokenResponse response = authService.signin(signinRequest);

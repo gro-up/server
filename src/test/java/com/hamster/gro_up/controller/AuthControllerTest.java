@@ -64,7 +64,7 @@ class AuthControllerTest {
     @DisplayName("회원가입에 성공하면 토큰을 반환한다")
     void signup_success() throws Exception {
         // given
-        SignupRequest signupRequest = new SignupRequest("test@test.com", "test", "password");
+        SignupRequest signupRequest = new SignupRequest("test@test.com", "password");
         TokenResponse token = new TokenResponse("token");
         given(authService.signup(any(SignupRequest.class))).willReturn(token);
 
@@ -103,12 +103,8 @@ class AuthControllerTest {
     @DisplayName("필수값이 누락된 회원가입 요청 시 예외가 발생한다")
     void signup_fail_validation() throws Exception {
         // given
-        SignupRequest invalidRequest = new SignupRequest(
-                "",
-                "hamster",
-                "password123"
-        );
-        
+        SignupRequest invalidRequest = new SignupRequest("", "password123");
+
         // when & then
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)

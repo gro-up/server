@@ -12,8 +12,5 @@ public class SignupRequest {
     private String email;
 
     @NotBlank
-    private String name;
-
-    @NotBlank
     private String password;
 }

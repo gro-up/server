@@ -60,7 +60,7 @@ class CompanyServiceTest {
                 .url("www.ham.com")
                 .build();
 
-        authUser = new AuthUser(1L, "ham@gmail.com", "ham", Role.ROLE_USER);
+        authUser = new AuthUser(1L, "ham@gmail.com", Role.ROLE_USER);
     }
 
     @Test
@@ -133,7 +133,7 @@ class CompanyServiceTest {
     @DisplayName("기업 수정 시 소유자가 아니면 예외가 발생한다")
     void updateCompany_fail_notOwner() {
         // given
-        AuthUser otherAuthUser = new AuthUser(2L, "other-user", "other-auth-user", Role.ROLE_USER);
+        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER);
         CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "busan", "www.new.com");
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
@@ -161,7 +161,7 @@ class CompanyServiceTest {
     @DisplayName("기업 삭제 시 소유자가 아니면 예외가 발생한다")
     void deleteCompany_fail_notOwner() {
         // given
-        AuthUser otherAuthUser = new AuthUser(2L, "other-user", "other-auth-user", Role.ROLE_USER);
+        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER);
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
         // when & then

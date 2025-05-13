@@ -21,13 +21,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> userRepository.save(
                         User.builder()
                                 .email(email)
-                                .name(name)
                                 .role(Role.ROLE_USER)
                                 .build()
                 ));
