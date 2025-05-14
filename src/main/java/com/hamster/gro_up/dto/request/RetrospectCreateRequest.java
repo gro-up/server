@@ -1,19 +1,17 @@
 package com.hamster.gro_up.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class CompanyUpdateRequest {
+public class RetrospectCreateRequest {
+
+    @NotNull
+    private Long scheduleId;
 
     @NotBlank
-    private String companyName;
-
-    private String position;
-
-    private String url;
-
-    private String location;
+    private String memo;
 }

@@ -9,6 +9,7 @@ import com.hamster.gro_up.dto.response.ScheduleResponse;
 import com.hamster.gro_up.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,8 @@ public class ScheduleController {
 
     @Operation(summary = "일정 생성")
     @PostMapping
-    public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@AuthenticationPrincipal AuthUser authUser, @RequestBody ScheduleCreateRequest scheduleCreateRequest) {
+    public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@AuthenticationPrincipal AuthUser authUser,
+                                                                        @Valid @RequestBody ScheduleCreateRequest scheduleCreateRequest) {
         ScheduleResponse response = scheduleService.createSchedule(authUser, scheduleCreateRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(HttpStatus.CREATED, response));
     }
@@ -47,7 +49,7 @@ public class ScheduleController {
     @Operation(summary = "일정 수정")
     @PutMapping("/{scheduleId}")
     public ResponseEntity<ApiResponse<Void>> updateSchedule(@AuthenticationPrincipal AuthUser authUser,
-                                                            @PathVariable long scheduleId,
+                                                            @PathVariable Long scheduleId,
                                                             @RequestBody ScheduleUpdateRequest scheduleUpdateRequest) {
         scheduleService.updateSchedule(authUser, scheduleId, scheduleUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
@@ -55,7 +57,7 @@ public class ScheduleController {
 
     @Operation(summary = "일정 삭제")
     @DeleteMapping("/{scheduleId}")
-    public ResponseEntity<ApiResponse<Void>> deleteSchedule(@AuthenticationPrincipal AuthUser authUser, @PathVariable long scheduleId) {
+    public ResponseEntity<ApiResponse<Void>> deleteSchedule(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long scheduleId) {
         scheduleService.deleteSchedule(authUser, scheduleId);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
