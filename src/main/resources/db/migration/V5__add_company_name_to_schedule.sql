@@ -1,0 +1,1 @@
+ALTER TABLE schedule ADD COLUMN company_name VARCHAR(255);
