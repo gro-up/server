@@ -175,7 +175,7 @@ class CompanyControllerTest {
     }
 
     @Test
-    @DisplayName("필수값이 누락된 기업 등록 요청 시 예외가 발생한다")
+    @DisplayName("필수값이 누락된 기업 등록 요청 시 400을 반환한다")
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void createCompany_fail_validation() throws Exception {
         // given

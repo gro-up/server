@@ -26,7 +26,7 @@ public class CompanyController {
 
     @Operation(summary = "기업 단건 조회")
     @GetMapping("/{companyId}")
-    public ResponseEntity<ApiResponse<CompanyResponse>> findCompany(@AuthenticationPrincipal AuthUser authUser, @PathVariable long companyId) {
+    public ResponseEntity<ApiResponse<CompanyResponse>> findCompany(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long companyId) {
         CompanyResponse response = companyService.findCompany(authUser, companyId);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -48,7 +48,7 @@ public class CompanyController {
     @Operation(summary = "기업 수정")
     @PutMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Void>> updateCompany(@AuthenticationPrincipal AuthUser authUser,
-                                                           @PathVariable long companyId,
+                                                           @PathVariable Long companyId,
                                                            @Valid @RequestBody CompanyUpdateRequest companyUpdateRequest) {
         companyService.updateCompany(authUser, companyId, companyUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
@@ -57,7 +57,7 @@ public class CompanyController {
     @Operation(summary = "기업 삭제")
     @DeleteMapping("/{companyId}")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@AuthenticationPrincipal AuthUser authUser,
-                                                           @PathVariable long companyId) {
+                                                           @PathVariable Long companyId) {
         companyService.deleteCompany(authUser, companyId);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

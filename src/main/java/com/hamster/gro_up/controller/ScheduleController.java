@@ -49,7 +49,7 @@ public class ScheduleController {
     @Operation(summary = "일정 수정")
     @PutMapping("/{scheduleId}")
     public ResponseEntity<ApiResponse<Void>> updateSchedule(@AuthenticationPrincipal AuthUser authUser,
-                                                            @PathVariable long scheduleId,
+                                                            @PathVariable Long scheduleId,
                                                             @RequestBody ScheduleUpdateRequest scheduleUpdateRequest) {
         scheduleService.updateSchedule(authUser, scheduleId, scheduleUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
@@ -57,7 +57,7 @@ public class ScheduleController {
 
     @Operation(summary = "일정 삭제")
     @DeleteMapping("/{scheduleId}")
-    public ResponseEntity<ApiResponse<Void>> deleteSchedule(@AuthenticationPrincipal AuthUser authUser, @PathVariable long scheduleId) {
+    public ResponseEntity<ApiResponse<Void>> deleteSchedule(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long scheduleId) {
         scheduleService.deleteSchedule(authUser, scheduleId);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
