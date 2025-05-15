@@ -6,6 +6,7 @@ import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.repository.EmailVerificationTokenRepository;
 import com.hamster.gro_up.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,9 @@ public class EmailVerificationService {
     private final EmailVerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.from}")
+    private String fromAddress;
 
     @Transactional
     public void sendVerificationCode(String email) {
@@ -44,6 +48,7 @@ public class EmailVerificationService {
 
         // 이메일 발송
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
         message.setTo(email);
         message.setSubject("이메일 인증 코드");
         message.setText("인증 코드: " + code);
