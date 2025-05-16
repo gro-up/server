@@ -1,6 +1,7 @@
 package com.hamster.gro_up.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hamster.gro_up.advise.GlobalExceptionHandler;
 import com.hamster.gro_up.config.CustomAccessDeniedHandler;
 import com.hamster.gro_up.config.CustomAuthenticationEntryPoint;
 import com.hamster.gro_up.config.CustomOAuth2SuccessHandler;
@@ -8,11 +9,14 @@ import com.hamster.gro_up.config.SecurityConfig;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
+import com.hamster.gro_up.exception.auth.ExpiredTokenException;
 import com.hamster.gro_up.exception.auth.InvalidEmailVerificationTokenException;
+import com.hamster.gro_up.exception.auth.TokenTypeMismatchException;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.service.AuthService;
 import com.hamster.gro_up.service.CustomOAuth2UserService;
 import com.hamster.gro_up.service.EmailVerificationService;
+import com.hamster.gro_up.util.CookieUtil;
 import com.hamster.gro_up.util.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,16 +25,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.mock.web.MockCookie;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = {AuthController.class})
 @Import({SecurityConfig.class, JwtUtil.class})
@@ -62,11 +66,11 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("회원가입에 성공하면 토큰을 반환한다")
-    void signup_success() throws Exception {
+    void signUp_success() throws Exception {
         // given
         SignupRequest signupRequest = new SignupRequest("test@test.com", "password");
-        TokenResponse token = new TokenResponse("token");
-        given(authService.signup(any(SignupRequest.class))).willReturn(token);
+        TokenResponse token = new TokenResponse("Access Token", "Refresh Token");
+        given(authService.signUp(any(SignupRequest.class))).willReturn(token);
 
         // when & then
         mockMvc.perform(post("/api/auth/signup")
@@ -76,17 +80,17 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.token").value(token.getToken()));
-
+                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
+                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
     }
 
     @Test
     @DisplayName("로그인에 성공하면 토큰을 반환한다")
-    void signin_success() throws Exception {
+    void signIn_success() throws Exception {
         // given
         SigninRequest signinRequest = new SigninRequest("test@test.com", "password");
-        TokenResponse token = new TokenResponse("token");
-        given(authService.signin(any(SigninRequest.class))).willReturn(token);
+        TokenResponse token = new TokenResponse("Access Token", "Refresh Token");
+        given(authService.signIn(any(SigninRequest.class))).willReturn(token);
 
         // when & then
         mockMvc.perform(post("/api/auth/signin")
@@ -96,12 +100,13 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.token").value(token.getToken()));
+                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
+                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
     }
 
     @Test
-    @DisplayName("필수값이 누락된 회원가입 요청 시 예외가 발생한다")
-    void signup_fail_validation() throws Exception {
+    @DisplayName("필수값이 누락된 회원가입 요청 시 400을 반환한다")
+    void signUp_fail_validation() throws Exception {
         // given
         SignupRequest invalidRequest = new SignupRequest("", "password123");
 
@@ -133,7 +138,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("이메일 인증 코드 요청 시 이미 가입된 이메일이면 예외가 발생한다")
+    @DisplayName("이메일 인증 코드 요청 시 이미 가입된 이메일이면 400을 반환한다")
     void sendVerificationCode_fail_duplicate() throws Exception {
         // given
         String email = "test@example.com";
@@ -168,7 +173,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("이메일 인증 코드 검증에 실패하면 예외가 발생한다")
+    @DisplayName("이메일 인증 코드 검증에 실패하면 400을 반환한다")
     void checkVerificationCode_fail_invalid() throws Exception {
         // given
         String email = "test@example.com";
@@ -185,4 +190,110 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").value("인증 코드가 유효하지 않습니다."));
     }
+
+    @Test
+    @DisplayName("로그아웃에 성공하면 200 OK와 쿠키 만료 응답을 반환한다")
+    void signOut_success() throws Exception {
+        // given
+        String refreshToken = "refresh-token-value";
+        // 쿠키 세팅
+        MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/sign-out")
+                        .cookie(refreshCookie)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data").doesNotExist())
+                .andExpect(cookie().maxAge(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, 0)); // 쿠키 만료 확인
+
+        // verify 서비스 호출
+        verify(authService).signOut(refreshToken);
+    }
+
+    @Test
+    @DisplayName("Refresh Token 이 없으면 로그아웃 시 400 을 반환한다")
+    void signOut_fail_noRefreshToken() throws Exception {
+        // when & then
+        mockMvc.perform(post("/api/auth/sign-out")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("Refresh Token 이 존재하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("정상적인 Refresh Token 으로 토큰 재발급에 성공한다")
+    void reissue_success() throws Exception {
+        // given
+        String refreshToken = "refresh-token-value";
+        TokenResponse tokenResponse = new TokenResponse("newAccessToken", "newRefreshToken");
+
+        MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+
+        given(authService.reissueAccessToken(refreshToken)).willReturn(tokenResponse);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/reissue")
+                        .cookie(refreshCookie)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data.accessToken").value("newAccessToken"))
+                .andExpect(jsonPath("$.data.refreshToken").value("newRefreshToken"))
+                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "newRefreshToken"));
+    }
+
+    @Test
+    @DisplayName("Refresh Token 이 없으면 토큰 재발급 시 400 을 반환한다")
+    void reissue_fail_noRefreshToken() throws Exception {
+        // when & then
+        mockMvc.perform(post("/api/auth/reissue")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("Refresh Token 이 존재하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("만료된 Refresh Token 으로 로그아웃 시 401을 반환된다")
+    void signOut_fail_expiredToken() throws Exception {
+        // given
+        String refreshToken = "expiredRefreshToken";
+        MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        doThrow(new ExpiredTokenException()).when(authService).signOut(refreshToken);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/sign-out")
+                        .cookie(refreshCookie)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("만료된 토큰입니다."));
+    }
+
+    @Test
+    @DisplayName("잘못된 타입의 Refresh Token 으로 로그아웃 시 401을 반환된다")
+    void signOut_fail_invalidTokenType() throws Exception {
+        // given
+        String refreshToken = "invalidTypeToken";
+        MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        doThrow(new TokenTypeMismatchException()).when(authService).signOut(refreshToken);
+
+        // when & then
+        mockMvc.perform(post("/api/auth/sign-out")
+                        .cookie(refreshCookie)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("Token type 이 일치하지 않습니다."));
+    }
+
 }

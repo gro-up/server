@@ -26,6 +26,7 @@ spring:
               - profile
               - email
   mail:
+    from: ${MAIL_FROM}
     host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME}
@@ -39,6 +40,10 @@ spring:
     url: ${LOCAL_DB_URL}
     user: root # MySQL 사용자 이름
     password: ${LOCAL_DB_PASSWORD}
+  data:
+    redis:
+      host: localhost
+      port: 6379
 jwt:
   secret:
     key: ${JWT_SECRET_KEY}  # JWT 비밀 키

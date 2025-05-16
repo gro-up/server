@@ -60,7 +60,7 @@ class CompanyServiceTest {
                 .url("www.ham.com")
                 .build();
 
-        authUser = new AuthUser(1L, "ham@gmail.com", Role.ROLE_USER);
+        authUser = AuthUser.builder().id(1L).email("ham@gmail.com").role(Role.ROLE_USER).build();
     }
 
     @Test
