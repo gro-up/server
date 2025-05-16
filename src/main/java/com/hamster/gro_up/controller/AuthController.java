@@ -44,8 +44,8 @@ public class AuthController {
     }
 
     @Operation(summary = "로그아웃")
-    @PostMapping("/sign-out")
-    public ResponseEntity<ApiResponse<Void>> signOut(HttpServletRequest request, HttpServletResponse response) {
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = CookieUtil.extractCookie(request, "refresh");
 
         if (refreshToken == null) {
