@@ -28,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -293,5 +292,34 @@ class AuthServiceTest {
         // when & then
         InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> authService.reissueAccessToken(refreshToken));
         assertThat(exception.getMessage()).isEqualTo("Refresh Token 이 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("계정 삭제에 성공하면 토큰 삭제 및 유저 삭제가 호출된다")
+    void deleteAccount_success() {
+        // given
+        AuthUser authUser = new AuthUser(1L, "test@example.com", Role.ROLE_USER);
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
+
+        // when
+        authService.deleteAccount(authUser);
+
+        // then
+        verify(userRepository).findById(authUser.getId());
+        verify(refreshTokenService).deleteRefreshToken(authUser.getEmail());
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 유저라면 예외가 발생한다")
+    void deleteAccount_userNotFound() {
+        // given
+        AuthUser authUser = new AuthUser(1L, "test@example.com", Role.ROLE_USER);
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(UserNotFoundException.class, () -> authService.deleteAccount(authUser));
+        verify(userRepository).findById(authUser.getId());
+        verifyNoMoreInteractions(userRepository, refreshTokenService);
     }
 }
