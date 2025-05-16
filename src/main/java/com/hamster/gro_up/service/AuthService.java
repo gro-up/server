@@ -131,4 +131,13 @@ public class AuthService {
 
         return TokenResponse.of(newAccessToken, newRefreshToken);
     }
+
+    @Transactional
+    public void deleteAccount(AuthUser authUser) {
+        User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
+
+        refreshTokenService.deleteRefreshToken(authUser.getEmail());
+
+        userRepository.delete(user);
+    }
 }
