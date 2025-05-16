@@ -194,7 +194,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("로그아웃에 성공하면 200 OK와 쿠키 만료 응답을 반환한다")
-    void signOut_success() throws Exception {
+    void logout_success() throws Exception {
         // given
         String refreshToken = "refresh-token-value";
         // 쿠키 세팅
@@ -203,7 +203,7 @@ class AuthControllerTest {
         refreshCookie.setSecure(true);
 
         // when & then
-        mockMvc.perform(post("/api/auth/sign-out")
+        mockMvc.perform(post("/api/auth/logout")
                         .cookie(refreshCookie)
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -218,9 +218,9 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("Refresh Token 이 없으면 로그아웃 시 400 을 반환한다")
-    void signOut_fail_noRefreshToken() throws Exception {
+    void logout_fail_noRefreshToken() throws Exception {
         // when & then
-        mockMvc.perform(post("/api/auth/sign-out")
+        mockMvc.perform(post("/api/auth/logout")
                         .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(400))
@@ -265,14 +265,14 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("만료된 Refresh Token 으로 로그아웃 시 401을 반환된다")
-    void signOut_fail_expiredToken() throws Exception {
+    void logout_fail_expiredToken() throws Exception {
         // given
         String refreshToken = "expiredRefreshToken";
         MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
         doThrow(new ExpiredTokenException()).when(authService).signOut(refreshToken);
 
         // when & then
-        mockMvc.perform(post("/api/auth/sign-out")
+        mockMvc.perform(post("/api/auth/logout")
                         .cookie(refreshCookie)
                         .with(csrf()))
                 .andExpect(status().isUnauthorized())
@@ -282,14 +282,14 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("잘못된 타입의 Refresh Token 으로 로그아웃 시 401을 반환된다")
-    void signOut_fail_invalidTokenType() throws Exception {
+    void logout_fail_invalidTokenType() throws Exception {
         // given
         String refreshToken = "invalidTypeToken";
         MockCookie refreshCookie = new MockCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken);
         doThrow(new TokenTypeMismatchException()).when(authService).signOut(refreshToken);
 
         // when & then
-        mockMvc.perform(post("/api/auth/sign-out")
+        mockMvc.perform(post("/api/auth/logout")
                         .cookie(refreshCookie)
                         .with(csrf()))
                 .andExpect(status().isUnauthorized())
