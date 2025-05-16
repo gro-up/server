@@ -49,4 +49,24 @@ public class AuthController {
         emailVerificationService.verifyCode(email, code);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
+
+    @Operation(summary = "토큰 재발급")
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<TokenResponse>> reissue(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = CookieUtil.extractCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
+
+        if (refreshToken == null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ApiResponse.of(HttpStatus.BAD_REQUEST, "Refresh Token 이 존재하지 않습니다.", null));
+        }
+
+        TokenResponse tokenResponse = authService.reissueAccessToken(refreshToken);
+
+        // 새 Refresh Token 을 쿠키에 저장 (Refresh Token Rotation)
+        Cookie newRefreshCookie = CookieUtil.createCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken(), 60 * 60 * 24 * 14); // 2주
+        response.addCookie(newRefreshCookie);
+
+        return ResponseEntity.ok(ApiResponse.ok(tokenResponse));
+    }
 }

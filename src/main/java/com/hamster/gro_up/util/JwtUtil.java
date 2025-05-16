@@ -1,7 +1,9 @@
 package com.hamster.gro_up.util;
 
+import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.entity.Role;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -17,7 +19,6 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final long TOKEN_TIME = 60 * 60 * 1000L; // 60분
 
     @Value("${jwt.secret.key}")
     private String secretKey;
@@ -30,18 +31,23 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    public String createToken(Long userId, String email, Role role) {
-        Date date = new Date();
+    public String createToken(TokenType tokenType, Long userId, String email, Role role) {
+        long currentTimeMillis = System.currentTimeMillis();
+        Date expirationDate = new Date(currentTimeMillis + tokenType.getExpireMs()); // 만료일
+        Date issuedAt = new Date(currentTimeMillis); // 발급일
 
-        return BEARER_PREFIX +
-               Jwts.builder()
-                       .setSubject(String.valueOf(userId))
-                       .claim("email", email)
-                       .claim("role", role)
-                       .setExpiration(new Date(date.getTime() + TOKEN_TIME))
-                       .setIssuedAt(date) // 발급일
-                       .signWith(key, signatureAlgorithm) // 암호화 알고리즘
-                       .compact();
+
+        String token = Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .claim("email", email)
+                .claim("role", role.name())
+                .claim("tokenType", tokenType.name())
+                .setExpiration(expirationDate)
+                .setIssuedAt(issuedAt)
+                .signWith(key, signatureAlgorithm)
+                .compact();
+
+        return TokenType.ACCESS.equals(tokenType) ? BEARER_PREFIX + token : token;
     }
 
     public String substringToken(String tokenValue) {
@@ -59,4 +65,29 @@ public class JwtUtil {
                 .getBody();
     }
 
+    public boolean isExpired(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return false; // 정상 토큰
+        } catch (ExpiredJwtException e) {
+            return true; // 만료된 토큰
+        }
+    }
+
+    public String getTokenType(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().get("tokenType", String.class);
+    }
+
+    public String getEmail(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().get("email", String.class);
+    }
+
+    public AuthUser getAuthUserFromToken(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        Long userId = Long.valueOf(claims.getSubject());
+        String email = claims.get("email", String.class);
+        Role role = Role.of(claims.get("role", String.class));
+
+        return AuthUser.builder().id(userId).email(email).role(role).build();
+    }
 }
