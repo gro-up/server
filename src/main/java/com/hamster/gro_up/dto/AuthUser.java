@@ -1,30 +1,33 @@
 package com.hamster.gro_up.dto;
 
 import com.hamster.gro_up.entity.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@AllArgsConstructor
+@Builder
 @Getter
 public class AuthUser {
 
-    private final Long id;
-    private final String email;
-    private final Collection<? extends GrantedAuthority> authorities;
+    private Long id;
+    private String email;
+    private Role role;
 
-    public AuthUser(Long id, String email, Role role) {
-        this.id = id;
-        this.email = email;
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(role.name()));
+
         if (role == Role.ROLE_ADMIN) {
-            this.authorities = List.of(
-                    new SimpleGrantedAuthority(Role.ROLE_ADMIN.name()),
-                    new SimpleGrantedAuthority(Role.ROLE_USER.name())
-            );
-        } else {
-            this.authorities = List.of(new SimpleGrantedAuthority(role.name()));
+            authorities.add(new SimpleGrantedAuthority(Role.ROLE_USER.name()));
         }
+
+        return authorities;
     }
 }

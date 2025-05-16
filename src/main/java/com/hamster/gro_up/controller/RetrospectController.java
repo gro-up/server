@@ -8,6 +8,7 @@ import com.hamster.gro_up.dto.response.RetrospectListResponse;
 import com.hamster.gro_up.dto.response.RetrospectResponse;
 import com.hamster.gro_up.service.RetrospectService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "회고", description = "회고 관련 API")
 @RequiredArgsConstructor
 @RequestMapping("/api/retrospects")
 @RestController

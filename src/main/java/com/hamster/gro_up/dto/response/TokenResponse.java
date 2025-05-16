@@ -6,5 +6,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class TokenResponse {
-    private String token;
+
+    private String accessToken;
+
+    private String refreshToken;
+
+    public static TokenResponse of(String accessToken, String refreshToken) {
+        return new TokenResponse(accessToken, refreshToken);
+    }
 }
