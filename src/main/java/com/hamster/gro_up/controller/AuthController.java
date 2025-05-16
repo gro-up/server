@@ -1,6 +1,7 @@
 package com.hamster.gro_up.controller;
 
 import com.hamster.gro_up.dto.ApiResponse;
+import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "인증 및 인가", description = "인증 및 인가 관련 API")
@@ -93,5 +95,12 @@ public class AuthController {
         response.addCookie(newRefreshCookie);
 
         return ResponseEntity.ok(ApiResponse.ok(tokenResponse));
+    }
+
+    @Operation(summary = "계정 삭제")
+    @DeleteMapping("/account")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(@AuthenticationPrincipal AuthUser authUser) {
+        authService.deleteAccount(authUser);
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

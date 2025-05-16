@@ -2,17 +2,17 @@ package com.hamster.gro_up.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hamster.gro_up.advise.GlobalExceptionHandler;
-import com.hamster.gro_up.config.CustomAccessDeniedHandler;
-import com.hamster.gro_up.config.CustomAuthenticationEntryPoint;
-import com.hamster.gro_up.config.CustomOAuth2SuccessHandler;
-import com.hamster.gro_up.config.SecurityConfig;
+import com.hamster.gro_up.config.*;
+import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
+import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.exception.auth.ExpiredTokenException;
 import com.hamster.gro_up.exception.auth.InvalidEmailVerificationTokenException;
 import com.hamster.gro_up.exception.auth.TokenTypeMismatchException;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
+import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.service.AuthService;
 import com.hamster.gro_up.service.CustomOAuth2UserService;
 import com.hamster.gro_up.service.EmailVerificationService;
@@ -33,6 +33,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -296,4 +297,30 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("Token type 이 일치하지 않습니다."));
     }
 
+    @Test
+    @DisplayName("계정 삭제에 성공한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void deleteAccount_success() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/api/auth/account"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(authService).deleteAccount(any(AuthUser.class));
+    }
+
+    @Test
+    @DisplayName("계정 삭제 시 해당 사용자가 없으면 404를 반환한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void deleteAccount_userNotFound() throws Exception {
+        // given
+        doThrow(new UserNotFoundException()).when(authService).deleteAccount(any(AuthUser.class));
+
+        // when & then
+        mockMvc.perform(delete("/api/auth/account"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
 }
