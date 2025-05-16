@@ -1,34 +1,33 @@
 package com.hamster.gro_up.service;
 
-import com.hamster.gro_up.entity.EmailVerificationToken;
 import com.hamster.gro_up.exception.auth.InvalidEmailVerificationTokenException;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
-import com.hamster.gro_up.repository.EmailVerificationTokenRepository;
 import com.hamster.gro_up.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class EmailVerificationService {
 
-    private final EmailVerificationTokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final JavaMailSender mailSender;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${spring.mail.from}")
     private String fromAddress;
 
-    @Transactional
+    private static final String VERIFICATION_PREFIX = "email_verification:";
+    private static final String VERIFIED_SUFFIX = ":verified";
+    private static final long VERIFICATION_CODE_TTL_MINUTES = 10L;
+
     public void sendVerificationCode(String email) {
 
         if (userRepository.existsByEmail(email)) {
@@ -38,13 +37,9 @@ public class EmailVerificationService {
         // 6자리 숫자 코드 생성
         String code = String.format("%06d", new Random().nextInt(999999));
 
-        EmailVerificationToken token = EmailVerificationToken.builder()
-                .email(email)
-                .token(code)
-                .expiryDate(LocalDateTime.now().plusMinutes(10))
-                .build();
-
-        tokenRepository.save(token);
+        // Redis 에 인증번호 저장 (key: email_verification:{email}, value: code)
+        String key = VERIFICATION_PREFIX + email;
+        redisTemplate.opsForValue().set(key, code, VERIFICATION_CODE_TTL_MINUTES, TimeUnit.MINUTES);
 
         // 이메일 발송
         SimpleMailMessage message = new SimpleMailMessage();
@@ -55,24 +50,22 @@ public class EmailVerificationService {
         mailSender.send(message);
     }
 
-    @Transactional
     public void verifyCode(String email, String code) {
-        Optional<EmailVerificationToken> optionalToken = tokenRepository.findByEmailAndTokenAndUsedFalse(email, code);
+        String key = VERIFICATION_PREFIX + email;
+        String storedCode = redisTemplate.opsForValue().get(key);
 
-        if (optionalToken.isPresent()) {
-            EmailVerificationToken token = optionalToken.get();
-            if (token.getExpiryDate().isAfter(LocalDateTime.now())) {
-                token.setUsed(true);
-                return;
-            }
+        if (storedCode == null || !storedCode.equals(code)) {
+            throw new InvalidEmailVerificationTokenException();
         }
 
-        throw new InvalidEmailVerificationTokenException();
+        redisTemplate.opsForValue().set(key + VERIFIED_SUFFIX, "true", VERIFICATION_CODE_TTL_MINUTES, TimeUnit.MINUTES);
+        redisTemplate.delete(key);
     }
 
     // 인증 완료 여부 확인
     public boolean isEmailVerified(String email) {
-        // 인증 성공한 토큰이 있는지 확인
-        return tokenRepository.existsByEmailAndUsedTrue(email);
+        String verifiedKey = VERIFICATION_PREFIX + email + VERIFIED_SUFFIX;
+        String verified = redisTemplate.opsForValue().get(verifiedKey);
+        return "true".equalsIgnoreCase(verified);
     }
 }
