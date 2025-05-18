@@ -2,6 +2,8 @@ package com.hamster.gro_up.controller;
 
 import com.hamster.gro_up.dto.ApiResponse;
 import com.hamster.gro_up.dto.AuthUser;
+import com.hamster.gro_up.dto.request.PasswordCheckRequest;
+import com.hamster.gro_up.dto.request.PasswordUpdateRequest;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
@@ -101,6 +103,37 @@ public class AuthController {
     @DeleteMapping("/account")
     public ResponseEntity<ApiResponse<Void>> deleteAccount(@AuthenticationPrincipal AuthUser authUser) {
         authService.deleteAccount(authUser);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "비밀번호 검증")
+    @PostMapping("/password-check")
+    public ResponseEntity<ApiResponse<Void>> checkPassword(@AuthenticationPrincipal AuthUser authUser,
+                                                           @Valid @RequestBody PasswordCheckRequest passwordCheckRequest) {
+        authService.checkPassword(authUser, passwordCheckRequest);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "비밀번호 변경")
+    @PostMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(@AuthenticationPrincipal AuthUser authUser,
+                                                            @Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
+        authService.updatePassword(authUser, passwordUpdateRequest);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "비밀번호 재설정 요청")
+    @PostMapping("/reset-request")
+    public ResponseEntity<ApiResponse<Void>> resetRequest(@RequestParam String email) {
+        authService.requestPasswordReset(email);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "비밀번호 재설정")
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> reset(@RequestParam String token,
+                                                   @Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
+        authService.resetPassword(token, passwordUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
