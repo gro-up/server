@@ -1,6 +1,8 @@
 package com.hamster.gro_up.service;
 
 import com.hamster.gro_up.dto.AuthUser;
+import com.hamster.gro_up.dto.request.PasswordCheckRequest;
+import com.hamster.gro_up.dto.request.PasswordUpdateRequest;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
@@ -14,9 +16,16 @@ import com.hamster.gro_up.util.JwtUtil;
 import com.hamster.gro_up.util.TokenType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,6 +38,11 @@ public class AuthService {
     private final EmailVerificationService emailVerificationService;
     private final RefreshTokenService refreshTokenService;
     private final JwtUtil jwtUtil;
+    private final StringRedisTemplate redisTemplate;
+    private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.from}")
+    private String fromAddress;
 
     @Transactional
     public TokenResponse signUp(SignupRequest signupRequest) {
@@ -139,5 +153,60 @@ public class AuthService {
         refreshTokenService.deleteRefreshToken(authUser.getEmail());
 
         userRepository.delete(user);
+    }
+
+    public void checkPassword(AuthUser authUser, PasswordCheckRequest passwordCheckRequest) {
+        User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
+
+        if (!passwordEncoder.matches(passwordCheckRequest.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("비밀번호가 일치하지 않습니다.");
+        }
+    }
+
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+        String token = UUID.randomUUID().toString();
+
+        redisTemplate.opsForValue().set(token, user.getId().toString(), 10, TimeUnit.MINUTES);
+
+        //TODO: front-end url 로 변경해야함.
+        String resetUrl = "https://gro-up.shop/reset-password?token=" + token;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
+        message.setTo(email);
+        message.setSubject("비밀번호 재설정 안내");
+        message.setText("아래 링크를 클릭해 비밀번호를 재설정하세요:\n" + resetUrl);
+        mailSender.send(message);
+    }
+
+    @Transactional
+    public void resetPassword(String token, PasswordUpdateRequest passwordUpdateRequest) {
+        String userId = redisTemplate.opsForValue().get(token);
+
+        if(userId == null) {
+            throw new InvalidTokenException();
+        }
+
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(UserNotFoundException::new);
+
+        String encodedNewPassword = passwordEncoder.encode(passwordUpdateRequest.getPassword());
+
+        user.updatePassword(encodedNewPassword);
+
+        redisTemplate.delete(token);
+
+        refreshTokenService.deleteRefreshToken(user.getEmail());
+    }
+
+    @Transactional
+    public void updatePassword(AuthUser authUser, PasswordUpdateRequest passwordUpdateRequest) {
+        User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
+
+        String encodedPassword = passwordEncoder.encode(passwordUpdateRequest.getPassword());
+
+        user.updatePassword(encodedPassword);
+
+        refreshTokenService.deleteRefreshToken(authUser.getEmail());
     }
 }
