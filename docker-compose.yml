@@ -1,0 +1,55 @@
+version: "3"
+services:
+  springboot:
+    image: 344789575612.dkr.ecr.ap-northeast-2.amazonaws.com/gro-up-server:latest
+    container_name: springboot
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    expose:
+      - "8080"
+    networks:
+      - backend
+
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CERTBOT_EMAIL=isjung7057@gmail.com
+      - NGINX_DOMAIN=gro-up.shop
+    volumes:
+      - ./nginx/user_conf.d:/etc/nginx/user_conf.d
+      - ./nginx/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - springboot
+    networks:
+      - backend
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-data:/prometheus
+    networks:
+      - backend
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
+networks:
+  backend:
