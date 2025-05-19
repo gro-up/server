@@ -11,8 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
 
 @Slf4j
 @RestControllerAdvice
@@ -71,17 +74,23 @@ public class GlobalExceptionHandler {
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
-        StringBuilder sb = new StringBuilder();
-        for (FieldError fieldError : bindingResult.getFieldErrors()) {
-            sb.append("[");
-            sb.append(fieldError.getField());
-            sb.append("](은)는 ");
-            sb.append(fieldError.getDefaultMessage());
-            sb.append(" 입력된 값: [");
-            sb.append(fieldError.getRejectedValue());
-            sb.append("]");
-        }
+        List<String> errorMessages = bindingResult.getFieldErrors().stream()
+                .map(fieldError -> String.format("[%s](은)는 %s 입력된 값: [%s]",
+                        fieldError.getField(),
+                        fieldError.getDefaultMessage(),
+                        fieldError.getRejectedValue()))
+                .toList();
+        return ResponseEntity.status(status).body(ApiResponse.of(status, errorMessages, null));
+    }
 
-        return ResponseEntity.status(status).body(ApiResponse.of(status, sb.toString(), null));
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMissingParam(MissingServletRequestParameterException e) {
+        log.error(e.getMessage());
+
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        List<String> errorMessages = List.of(e.getMessage());
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, errorMessages, null));
     }
 }
