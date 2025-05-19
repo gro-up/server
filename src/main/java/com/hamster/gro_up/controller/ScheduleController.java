@@ -11,10 +11,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Tag(name = "일정", description = "일정 관련 API")
 @RequiredArgsConstructor
@@ -60,5 +64,16 @@ public class ScheduleController {
     public ResponseEntity<ApiResponse<Void>> deleteSchedule(@AuthenticationPrincipal AuthUser authUser, @PathVariable Long scheduleId) {
         scheduleService.deleteSchedule(authUser, scheduleId);
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "날짜 범위별 일정 조회")
+    @GetMapping("/range")
+    public ResponseEntity<ApiResponse<ScheduleListResponse>> getSchedulesByDateRange(
+            @AuthenticationPrincipal AuthUser authUser,
+            @RequestParam @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
+            @RequestParam @DateTimeFormat(pattern = "yyyyMMdd") LocalDate end
+    ) {
+        ScheduleListResponse response = scheduleService.findSchedulesInRange(authUser, start, end);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

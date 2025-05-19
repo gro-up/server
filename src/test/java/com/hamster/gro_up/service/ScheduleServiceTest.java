@@ -19,7 +19,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -269,6 +271,52 @@ class ScheduleServiceTest {
         ForbiddenException exception = assertThrows(ForbiddenException.class,
                 () -> scheduleService.deleteSchedule(otherUser, schedule.getId()));
         assertThat(exception.getMessage()).isEqualTo("해당 리소스에 접근할 권한이 없습니다.");
+    }
+
+    @Test
+    @DisplayName("날짜 범위별 일정 조회에 성공한다")
+    void findSchedulesInRange_success() {
+        // given
+        LocalDate startDate = LocalDate.of(2025, 5, 1);
+        LocalDate endDate = LocalDate.of(2025, 5, 31);
+
+        Schedule schedule2 = Schedule.builder()
+                .id(101L)
+                .user(user)
+                .company(company)
+                .dueDate(LocalDateTime.of(2025, 6, 2, 14, 0))
+                .step(Step.SECOND_INTERVIEW)
+                .position("프론트엔드")
+                .memo("2차 면접")
+                .build();
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        given(scheduleRepository.findSchedulesInRange(authUser.getId(), startDateTime, endDateTime))
+                .willReturn(List.of(schedule, schedule2));
+
+        // when
+        ScheduleListResponse response = scheduleService.findSchedulesInRange(authUser, startDate, endDate);
+
+        // then
+        assertThat(response.getScheduleList()).hasSize(2);
+
+        ScheduleResponse resp1 = response.getScheduleList().get(0);
+        assertThat(resp1.getCompanyId()).isEqualTo(company.getId());
+        assertThat(resp1.getCompanyName()).isEqualTo(company.getCompanyName());
+        assertThat(resp1.getStep()).isEqualTo(schedule.getStep().getDisplayName());
+        assertThat(resp1.getPosition()).isEqualTo(schedule.getPosition());
+        assertThat(resp1.getMemo()).isEqualTo(schedule.getMemo());
+        assertThat(resp1.getDueDate()).isEqualTo(schedule.getDueDate());
+
+        ScheduleResponse resp2 = response.getScheduleList().get(1);
+        assertThat(resp2.getCompanyId()).isEqualTo(company.getId());
+        assertThat(resp2.getCompanyName()).isEqualTo(company.getCompanyName());
+        assertThat(resp2.getStep()).isEqualTo(schedule2.getStep().getDisplayName());
+        assertThat(resp2.getPosition()).isEqualTo(schedule2.getPosition());
+        assertThat(resp2.getMemo()).isEqualTo(schedule2.getMemo());
+        assertThat(resp2.getDueDate()).isEqualTo(schedule2.getDueDate());
     }
 
 }

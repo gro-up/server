@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -212,5 +213,76 @@ class ScheduleControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.message").isNotEmpty())
                 .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("날짜 범위별 일정 조회에 성공한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void getSchedulesByDateRange_success() throws Exception {
+        // given
+        ScheduleResponse schedule1 = new ScheduleResponse(
+                1L, "ham-corp", "DOCUMENT", "백엔드", "메모",
+                LocalDateTime.of(2025, 5, 10, 10, 0),
+                LocalDateTime.of(2025, 5, 10, 11, 0),
+                LocalDateTime.of(2025, 5, 10, 10, 0)
+        );
+        ScheduleResponse schedule2 = new ScheduleResponse(
+                2L, "ham-corp", "INTERVIEW", "프론트", "면접",
+                LocalDateTime.of(2025, 5, 20, 14, 0),
+                LocalDateTime.of(2025, 5, 20, 15, 0),
+                LocalDateTime.of(2025, 5, 20, 14, 0)
+        );
+        ScheduleListResponse response = ScheduleListResponse.of(List.of(schedule1, schedule2));
+        given(scheduleService.findSchedulesInRange(any(), eq(LocalDate.of(2025, 5, 1)), eq(LocalDate.of(2025, 5, 31))))
+                .willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/schedules/range")
+                        .param("start", "20250501")
+                        .param("end", "20250531")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data.scheduleList").isArray())
+                .andExpect(jsonPath("$.data.scheduleList[0].companyId").value(1))
+                .andExpect(jsonPath("$.data.scheduleList[0].companyName").value("ham-corp"))
+                .andExpect(jsonPath("$.data.scheduleList[1].companyId").value(2))
+                .andExpect(jsonPath("$.data.scheduleList[1].companyName").value("ham-corp"));
+    }
+
+    @Test
+    @DisplayName("날짜 범위별 일정이 없으면 빈 리스트가 반환된다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void getSchedulesByDateRange_empty() throws Exception {
+        // given
+        ScheduleListResponse emptyResponse = ScheduleListResponse.of(List.of());
+        given(scheduleService.findSchedulesInRange(any(), any(LocalDate.class), any(LocalDate.class)))
+                .willReturn(emptyResponse);
+
+        // when & then
+        mockMvc.perform(get("/api/schedules/range")
+                        .param("start", "20250501")
+                        .param("end", "20250531")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data.scheduleList").isArray())
+                .andExpect(jsonPath("$.data.scheduleList").isEmpty());
+    }
+
+    @Test
+    @DisplayName("필수값 누락시 400을 반환한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void getSchedulesByDateRange_fail_validation() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/schedules/range")
+                        .param("start", "") // 빈 값
+                        .param("end", "20250531")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").exists());
     }
 }
