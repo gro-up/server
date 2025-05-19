@@ -1,0 +1,1 @@
+ALTER TABLE schedule MODIFY COLUMN company_id BIGINT;
