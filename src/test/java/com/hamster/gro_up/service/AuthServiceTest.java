@@ -1,6 +1,8 @@
 package com.hamster.gro_up.service;
 
 import com.hamster.gro_up.dto.AuthUser;
+import com.hamster.gro_up.dto.request.PasswordCheckRequest;
+import com.hamster.gro_up.dto.request.PasswordUpdateRequest;
 import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
@@ -19,11 +21,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.any;
@@ -46,7 +54,13 @@ class AuthServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
+    private StringRedisTemplate redisTemplate;
+
+    @Mock
     private JwtUtil jwtUtil;
+
+    @Mock
+    private JavaMailSender mailSender;
 
     @InjectMocks
     private AuthService authService;
@@ -321,5 +335,129 @@ class AuthServiceTest {
         assertThrows(UserNotFoundException.class, () -> authService.deleteAccount(authUser));
         verify(userRepository).findById(authUser.getId());
         verifyNoMoreInteractions(userRepository, refreshTokenService);
+    }
+
+    @Test
+    @DisplayName("비밀번호 검증에 성공한다")
+    void checkPassword_success() {
+        // given
+        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
+        PasswordCheckRequest req = new PasswordCheckRequest("plain_password");
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("plain_password", user.getPassword())).willReturn(true);
+
+        // when & then
+        assertDoesNotThrow(() -> authService.checkPassword(authUser, req));
+        verify(userRepository).findById(authUser.getId());
+        verify(passwordEncoder).matches("plain_password", user.getPassword());
+    }
+
+    @Test
+    @DisplayName("비밀번호 검증 실패 시 예외가 발생한다")
+    void checkPassword_fail_invalid() {
+        // given
+        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
+        PasswordCheckRequest req = new PasswordCheckRequest("wrong_password");
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong_password", user.getPassword())).willReturn(false);
+
+        // when & then
+        InvalidCredentialsException exception = assertThrows(InvalidCredentialsException.class,
+                () -> authService.checkPassword(authUser, req));
+        assertThat(exception.getMessage()).isEqualTo("비밀번호가 일치하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 요청 시 이메일 전송 및 토큰을 저장한다")
+    void requestPasswordReset_success() {
+        // given
+        String email = "test@test.com";
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(valueOps);
+
+        // when & then
+        assertDoesNotThrow(() -> authService.requestPasswordReset(email));
+        verify(userRepository).findByEmail(email);
+        verify(valueOps).set(anyString(), eq(user.getId().toString()), eq(10L), eq(TimeUnit.MINUTES));
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 요청 시 존재하지 않는 이메일이면 예외가 발생한다")
+    void requestPasswordReset_fail_userNotFound() {
+        // given
+        String email = "notfound@test.com";
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(UserNotFoundException.class, () -> authService.requestPasswordReset(email));
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정에 성공한다")
+    void resetPassword_success() {
+        // given
+        String token = "token123";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(valueOps.get(token)).willReturn("1");
+
+        given(userRepository.findById(1L)).willReturn(Optional.of(user));
+        given(passwordEncoder.encode("new_password")).willReturn("encoded_new_password");
+
+        // when & then
+        assertDoesNotThrow(() -> authService.resetPassword(token, req));
+        verify(userRepository).findById(1L);
+        verify(passwordEncoder).encode("new_password");
+        verify(redisTemplate).delete(token);
+        verify(refreshTokenService).deleteRefreshToken(user.getEmail());
+    }
+
+    @Test
+    @DisplayName("비밀번호 재설정 시 잘못된 토큰이면 예외가 발생한다")
+    void resetPassword_fail_invalidToken() {
+        // given
+        String token = "invalid_token";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        // when & then
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(valueOps);
+        given(valueOps.get(token)).willReturn(null);
+
+        assertThrows(InvalidTokenException.class, () -> authService.resetPassword(token, req));
+    }
+
+    @Test
+    @DisplayName("로그인 상태에서 비밀번호 변경에 성공한다")
+    void updatePassword_success() {
+        // given
+        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
+        given(passwordEncoder.encode("new_password")).willReturn("encoded_pw");
+
+        // when & then
+        assertDoesNotThrow(() -> authService.updatePassword(authUser, req));
+        verify(userRepository).findById(authUser.getId());
+        verify(passwordEncoder).encode("new_password");
+        verify(refreshTokenService).deleteRefreshToken(authUser.getEmail());
+    }
+
+    @Test
+    @DisplayName("로그인 상태에서 비밀번호 변경 시 해당 사용자가 없으면 예외가 발생한다")
+    void updatePassword_fail_userNotFound() {
+        // given
+        AuthUser authUser = new AuthUser(2L, "notfound@test.com", Role.ROLE_USER);
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(userRepository.findById(authUser.getId())).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(UserNotFoundException.class, () -> authService.updatePassword(authUser, req));
     }
 }

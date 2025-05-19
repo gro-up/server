@@ -18,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -99,5 +102,16 @@ public class ScheduleService {
         schedule.validateOwner(authUser.getId());
 
         scheduleRepository.delete(schedule);
+    }
+
+    public ScheduleListResponse findSchedulesInRange(AuthUser authUser, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        List<Schedule> schedules = scheduleRepository.findSchedulesInRange(authUser.getId(), startDateTime, endDateTime);
+
+        List<ScheduleResponse> responseList = schedules.stream().map(ScheduleResponse::from).toList();
+
+        return ScheduleListResponse.of(responseList);
     }
 }

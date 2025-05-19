@@ -27,9 +27,11 @@ public class ScheduleResponse {
     private LocalDateTime updatedAt;
 
     public static ScheduleResponse from(Schedule schedule) {
+        Long companyId = (schedule.getCompany() != null) ? schedule.getCompany().getId() : null;
+
         return new ScheduleResponse(
-                schedule.getCompany().getId(),
-                schedule.getCompany().getCompanyName(),
+                companyId,
+                schedule.getCompanyName(),
                 schedule.getStep().getDisplayName(),
                 schedule.getPosition(),
                 schedule.getMemo(),
