@@ -16,6 +16,8 @@ public class ScheduleCreateRequest {
     @NotBlank
     private String companyName;
 
+    private String companyLocation;
+
     private Step step;
 
     private LocalDateTime dueDate;

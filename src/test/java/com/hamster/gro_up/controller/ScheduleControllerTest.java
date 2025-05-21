@@ -65,7 +65,7 @@ class ScheduleControllerTest {
         // given
         ScheduleResponse response = new ScheduleResponse(
                 10L, "ham-corp", "DOCUMENT", "백엔드", "메모",
-                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+                "서울", LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
         );
         given(scheduleService.findSchedule(any(), eq(100L))).willReturn(response);
 
@@ -100,11 +100,11 @@ class ScheduleControllerTest {
         // given
         ScheduleResponse schedule1 = new ScheduleResponse(
                 10L, "ham-corp", "DOCUMENT", "백엔드", "메모1",
-                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+                "서울", LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
         );
         ScheduleResponse schedule2 = new ScheduleResponse(
                 11L, "egg-corp", "INTERVIEW", "프론트엔드", "메모2",
-                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+                "서울", LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
         );
         ScheduleListResponse response = ScheduleListResponse.of(List.of(schedule1, schedule2));
         given(scheduleService.findAllSchedules(any())).willReturn(response);
@@ -126,11 +126,11 @@ class ScheduleControllerTest {
     void createSchedule_success() throws Exception {
         // given
         ScheduleCreateRequest request = new ScheduleCreateRequest(
-                10L, "ham-corp", Step.DOCUMENT, LocalDateTime.now(), " 백엔드", "메모"
+                10L, "ham-corp", "서울", Step.DOCUMENT, LocalDateTime.now(), " 백엔드", "메모"
         );
         ScheduleResponse response = new ScheduleResponse(
                 10L, "ham-corp", "DOCUMENT", "백엔드", "메모",
-                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+                "서울", LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
         );
         given(scheduleService.createSchedule(any(), any())).willReturn(response);
 
@@ -198,6 +198,7 @@ class ScheduleControllerTest {
         ScheduleCreateRequest invalidRequest = new ScheduleCreateRequest(
                 null,           // companyId
                 "",             // companyName (NotBlank 위반)
+                "서울",
                 null,           // step
                 null,           // dueDate
                 null,           // position
@@ -221,13 +222,13 @@ class ScheduleControllerTest {
     void getSchedulesByDateRange_success() throws Exception {
         // given
         ScheduleResponse schedule1 = new ScheduleResponse(
-                1L, "ham-corp", "DOCUMENT", "백엔드", "메모",
+                1L, "ham-corp", "서울", "DOCUMENT", "백엔드", "메모",
                 LocalDateTime.of(2025, 5, 10, 10, 0),
                 LocalDateTime.of(2025, 5, 10, 11, 0),
                 LocalDateTime.of(2025, 5, 10, 10, 0)
         );
         ScheduleResponse schedule2 = new ScheduleResponse(
-                2L, "ham-corp", "INTERVIEW", "프론트", "면접",
+                2L, "ham-corp", "서울", "INTERVIEW", "프론트", "면접",
                 LocalDateTime.of(2025, 5, 20, 14, 0),
                 LocalDateTime.of(2025, 5, 20, 15, 0),
                 LocalDateTime.of(2025, 5, 20, 14, 0)

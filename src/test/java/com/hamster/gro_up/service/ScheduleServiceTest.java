@@ -168,6 +168,7 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
+                company.getLocation(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -197,6 +198,7 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
+                company.getLocation(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
