@@ -118,4 +118,12 @@ public class ScheduleService {
 
         return ScheduleListResponse.of(responseList);
     }
+
+    public ScheduleListResponse findSchedulesByCompanyName(AuthUser authUser, String companyName) {
+        List<Schedule> schedules = scheduleRepository.findByUserIdAndCompanyName(authUser.getId(), companyName);
+
+        List<ScheduleResponse> responseList = schedules.stream().map(ScheduleResponse::from).toList();
+
+        return ScheduleListResponse.of(responseList);
+    }
 }

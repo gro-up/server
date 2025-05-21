@@ -68,12 +68,20 @@ public class ScheduleController {
 
     @Operation(summary = "날짜 범위별 일정 조회")
     @GetMapping("/range")
-    public ResponseEntity<ApiResponse<ScheduleListResponse>> getSchedulesByDateRange(
+    public ResponseEntity<ApiResponse<ScheduleListResponse>> findSchedulesByDateRange(
             @AuthenticationPrincipal AuthUser authUser,
             @RequestParam @DateTimeFormat(pattern = "yyyyMMdd") LocalDate start,
             @RequestParam @DateTimeFormat(pattern = "yyyyMMdd") LocalDate end
     ) {
         ScheduleListResponse response = scheduleService.findSchedulesInRange(authUser, start, end);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "정확한 기업명으로 일정 검색")
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<ScheduleListResponse>> findSchedulesByCompanyName(
+            @AuthenticationPrincipal AuthUser authUser, @RequestParam String companyName) {
+        ScheduleListResponse response = scheduleService.findSchedulesByCompanyName(authUser, companyName);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
