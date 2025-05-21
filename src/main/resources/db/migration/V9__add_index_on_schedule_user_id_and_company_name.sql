@@ -1,0 +1,1 @@
+CREATE INDEX idx_schedule_user_company ON schedule (user_id, company_name);
