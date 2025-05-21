@@ -4,6 +4,7 @@ import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
+import com.hamster.gro_up.dto.response.CompanyNameListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.Role;
@@ -214,5 +215,21 @@ class CompanyServiceTest {
 
         // then
         assertThat(response.getCompanyList()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("유저의 모든 기업명 조회 성공")
+    void findAllCompanyNames_success() {
+        // given
+        List<String> companyNames = List.of("네이버", "카카오", "라인");
+
+        given(companyRepository.findAllCompanyNamesByUserId(authUser.getId())).willReturn(companyNames);
+
+        // when
+        CompanyNameListResponse response = companyService.findAllCompanyNames(authUser);
+
+        // then
+        assertThat(response.getCompanyNameList()).hasSize(3);
+        assertThat(response.getCompanyNameList()).containsExactlyInAnyOrderElementsOf(companyNames);
     }
 }
