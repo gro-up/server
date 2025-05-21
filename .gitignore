@@ -243,3 +243,4 @@ gradle-app.setting
 
 src/main/resources/application-prod.yml
 develop/docker-compose.yml
+/develop/
