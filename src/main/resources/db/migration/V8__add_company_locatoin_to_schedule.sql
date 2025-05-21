@@ -1,0 +1,1 @@
+ALTER TABLE schedule ADD COLUMN company_location VARCHAR(255);
