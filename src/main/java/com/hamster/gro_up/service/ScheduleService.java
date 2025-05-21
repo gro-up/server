@@ -52,6 +52,7 @@ public class ScheduleService {
     public ScheduleResponse createSchedule(AuthUser authUser, ScheduleCreateRequest request) {
         Company company = null;
         String companyName;
+        String companyLocation;
 
         if(request.getCompanyId() != null) {
             company = companyRepository.findById(request.getCompanyId())
@@ -60,8 +61,10 @@ public class ScheduleService {
             company.validateOwner(authUser.getId());
 
             companyName = company.getCompanyName();
+            companyLocation = company.getLocation();
         }else {
             companyName = request.getCompanyName();
+            companyLocation = request.getCompanyLocation();
         }
 
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
@@ -70,6 +73,7 @@ public class ScheduleService {
                 .user(user)
                 .company(company)
                 .companyName(companyName)
+                .companyLocation(companyLocation)
                 .dueDate(request.getDueDate())
                 .step(request.getStep())
                 .position(request.getPosition())
