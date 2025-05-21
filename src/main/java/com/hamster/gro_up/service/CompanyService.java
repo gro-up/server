@@ -4,6 +4,7 @@ import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
+import com.hamster.gro_up.dto.response.CompanyNameListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.User;
@@ -78,5 +79,10 @@ public class CompanyService {
         company.validateOwner(authUser.getId());
 
         companyRepository.delete(company);
+    }
+
+    public CompanyNameListResponse findAllCompanyNames(AuthUser authUser) {
+        List<String> companyNames = companyRepository.findAllCompanyNamesByUserId(authUser.getId());
+        return CompanyNameListResponse.of(companyNames);
     }
 }

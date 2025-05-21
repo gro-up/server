@@ -128,10 +128,6 @@ public class AuthService {
             throw new TokenNotFoundException();
         }
 
-        log.info("storedRefreshToken: {}", storedRefreshToken);
-        log.info("refreshToken from request: {}", refreshToken);
-        log.info("equals: {}", storedRefreshToken.equals(refreshToken));
-
         if (!storedRefreshToken.equals(refreshToken)) {
             throw new InvalidTokenException("Refresh Token 이 일치하지 않습니다.");
         }
