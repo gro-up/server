@@ -323,4 +323,33 @@ class ScheduleServiceTest {
         assertThat(resp2.getDueDate()).isEqualTo(schedule2.getDueDate());
     }
 
+    @Test
+    @DisplayName("회사명으로 일정 조회 성공")
+    void findSchedulesByCompanyName_success() {
+        // given
+        String companyName = "네이버";
+
+        Schedule schedule2 = Schedule.builder()
+                .id(1L)
+                .user(user)
+                .companyName(companyName)
+                .position("개발자")
+                .memo("메모1")
+                .step(Step.DOCUMENT)
+                .dueDate(LocalDateTime.now())
+                .build();
+
+        List<Schedule> schedules = List.of(schedule, schedule2);
+
+        given(scheduleRepository.findByUserIdAndCompanyName(authUser.getId(), companyName)).willReturn(schedules);
+
+        // when
+        ScheduleListResponse response = scheduleService.findSchedulesByCompanyName(authUser, companyName);
+
+        // then
+        assertThat(response.getScheduleList()).hasSize(2);
+        ScheduleResponse scheduleResponse = response.getScheduleList().get(1);
+        assertThat(scheduleResponse.getCompanyName()).isEqualTo(companyName);
+        assertThat(scheduleResponse.getPosition()).isEqualTo(schedule2.getPosition());
+    }
 }

@@ -286,4 +286,33 @@ class ScheduleControllerTest {
                 .andExpect(jsonPath("$.code").value(400))
                 .andExpect(jsonPath("$.message").exists());
     }
+
+    @Test
+    @DisplayName("정확한 기업명으로 일정 검색에 성공한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void findSchedulesByCompanyName_success() throws Exception {
+        // given
+        String companyName = "네이버";
+        ScheduleResponse schedule1 = new ScheduleResponse(
+                10L, companyName, "서울", "DOCUMENT", "백엔드", "메모1",
+                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+        );
+        ScheduleResponse schedule2 = new ScheduleResponse(
+                10L, companyName, "서울", "INTERVIEW", "프론트엔드", "메모2",
+                LocalDateTime.now(), LocalDateTime.now(), LocalDateTime.now()
+        );
+        ScheduleListResponse response = ScheduleListResponse.of(List.of(schedule1, schedule2));
+        given(scheduleService.findSchedulesByCompanyName(any(), eq(companyName))).willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/schedules/search")
+                        .param("companyName", companyName))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.message").value("OK"))
+                .andExpect(jsonPath("$.data.scheduleList").isArray())
+                .andExpect(jsonPath("$.data.scheduleList[0].companyName").value(companyName))
+                .andExpect(jsonPath("$.data.scheduleList[1].companyName").value(companyName));
+    }
 }
