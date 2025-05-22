@@ -82,8 +82,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
-                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
+                .andExpect(jsonPath("$.data").value(token.getAccessToken()))
+                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
     }
 
     @Test
@@ -101,8 +101,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
-                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
+                .andExpect(jsonPath("$.data").value(token.getAccessToken()))
+                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
     }
 
     @Test
@@ -240,8 +240,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value("newAccessToken"))
-                .andExpect(jsonPath("$.data.refreshToken").value("newRefreshToken"))
+                .andExpect(jsonPath("$.data").value("newAccessToken"))
                 .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "newRefreshToken"));
     }
 
