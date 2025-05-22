@@ -21,12 +21,16 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    private UserType userType;
+
     @Builder
-    public User(Long id, String email, String password, Role role) {
+    public User(Long id, String email, String password, Role role, UserType userType) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.userType = userType;
     }
 
     public void updatePassword(String password) {
