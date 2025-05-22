@@ -33,4 +33,8 @@ public class CookieUtil {
         cookie.setSecure(true); // 운영환경에서만 true
         return cookie;
     }
+
+    public static Cookie createRefreshTokenCookie(String refreshToken){
+        return CookieUtil.createCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken, 60 * 60 * 24 * 14); // 2주
+    }
 }

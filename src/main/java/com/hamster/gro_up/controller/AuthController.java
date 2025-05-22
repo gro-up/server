@@ -33,16 +33,25 @@ public class AuthController {
 
     @Operation(summary = "일반 회원가입")
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<TokenResponse>> signUp(@Valid @RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignupRequest signupRequest, HttpServletResponse servletResponse) {
         TokenResponse response = authService.signUp(signupRequest);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+
+        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+        servletResponse.addCookie(refreshTokenCookie);
+
+        // body 에는 Access Token 만 담고 Refresh Token 은 쿠키에 담음
+        return ResponseEntity.ok(ApiResponse.ok(response.getAccessToken()));
     }
 
     @Operation(summary = "일반 로그인")
     @PostMapping("/signin")
-    public ResponseEntity<ApiResponse<TokenResponse>> signIn(@Valid @RequestBody SigninRequest signinRequest) {
+    public ResponseEntity<ApiResponse<String>> signIn(@Valid @RequestBody SigninRequest signinRequest, HttpServletResponse servletResponse) {
         TokenResponse response = authService.signIn(signinRequest);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+
+        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+        servletResponse.addCookie(refreshTokenCookie);
+
+        return ResponseEntity.ok(ApiResponse.ok(response.getAccessToken()));
     }
 
     @Operation(summary = "로그아웃")
@@ -81,7 +90,7 @@ public class AuthController {
 
     @Operation(summary = "토큰 재발급")
     @PostMapping("/reissue")
-    public ResponseEntity<ApiResponse<TokenResponse>> reissue(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<String>> reissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = CookieUtil.extractCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
 
         if (refreshToken == null) {
@@ -93,10 +102,10 @@ public class AuthController {
         TokenResponse tokenResponse = authService.reissueAccessToken(refreshToken);
 
         // 새 Refresh Token 을 쿠키에 저장 (Refresh Token Rotation)
-        Cookie newRefreshCookie = CookieUtil.createCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenResponse.getRefreshToken(), 60 * 60 * 24 * 14); // 2주
-        response.addCookie(newRefreshCookie);
+        Cookie newRefreshTokenCookie = CookieUtil.createRefreshTokenCookie(tokenResponse.getRefreshToken());
+        response.addCookie(newRefreshTokenCookie);
 
-        return ResponseEntity.ok(ApiResponse.ok(tokenResponse));
+        return ResponseEntity.ok(ApiResponse.ok(tokenResponse.getAccessToken()));
     }
 
     @Operation(summary = "계정 삭제")
