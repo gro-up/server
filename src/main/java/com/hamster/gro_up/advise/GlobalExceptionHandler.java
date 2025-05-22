@@ -1,10 +1,7 @@
 package com.hamster.gro_up.advise;
 
 import com.hamster.gro_up.dto.ApiResponse;
-import com.hamster.gro_up.exception.BadRequestException;
-import com.hamster.gro_up.exception.ForbiddenException;
-import com.hamster.gro_up.exception.NotFoundException;
-import com.hamster.gro_up.exception.UnauthorizedException;
+import com.hamster.gro_up.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +50,15 @@ public class GlobalExceptionHandler {
         log.error(e.getMessage());
 
         HttpStatus status = HttpStatus.NOT_FOUND;
+
+        return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConflictException(ConflictException e) {
+        log.error(e.getMessage());
+
+        HttpStatus status = HttpStatus.CONFLICT; // 409
 
         return ResponseEntity.status(status).body(ApiResponse.of(status, e.getMessage(), null));
     }
