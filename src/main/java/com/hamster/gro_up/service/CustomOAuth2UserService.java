@@ -3,6 +3,7 @@ package com.hamster.gro_up.service;
 import com.hamster.gro_up.dto.CustomOAuth2User;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.entity.UserType;
 import com.hamster.gro_up.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -27,6 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         User.builder()
                                 .email(email)
                                 .role(Role.ROLE_USER)
+                                .userType(UserType.OAUTH)
                                 .build()
                 ));
 

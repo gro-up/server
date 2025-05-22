@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hamster.gro_up.dto.ApiResponse;
 import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.entity.Role;
+import com.hamster.gro_up.entity.UserType;
 import com.hamster.gro_up.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -42,9 +43,10 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
                 Long userId = Long.valueOf(claims.getSubject());
                 String email = claims.get("email", String.class);
                 Role role = Role.of(claims.get("role", String.class));
+                UserType userType = UserType.of(claims.get("userType", String.class));
 
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    AuthUser authUser = AuthUser.builder().id(userId).email(email).role(role).build();
+                    AuthUser authUser = AuthUser.builder().id(userId).email(email).role(role).userType(userType).build();
 
                     JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(authUser);
 

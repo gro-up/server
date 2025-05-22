@@ -9,6 +9,7 @@ import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Company;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.entity.UserType;
 import com.hamster.gro_up.exception.ForbiddenException;
 import com.hamster.gro_up.exception.company.CompanyNotFoundException;
 import com.hamster.gro_up.repository.CompanyRepository;
@@ -50,6 +51,17 @@ class CompanyServiceTest {
     void setUp() {
         user = User.builder()
                 .id(1L)
+                .email("test@test.com")
+                .password("password")
+                .password("encoded_password")
+                .role(Role.ROLE_USER)
+                .build();
+
+        authUser = AuthUser.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .userType(user.getUserType())
                 .build();
 
         company = Company.builder()
@@ -60,8 +72,6 @@ class CompanyServiceTest {
                 .location("seoul")
                 .url("www.ham.com")
                 .build();
-
-        authUser = AuthUser.builder().id(1L).email("ham@gmail.com").role(Role.ROLE_USER).build();
     }
 
     @Test
@@ -134,7 +144,7 @@ class CompanyServiceTest {
     @DisplayName("기업 수정 시 소유자가 아니면 예외가 발생한다")
     void updateCompany_fail_notOwner() {
         // given
-        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER);
+        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER, UserType.LOCAL);
         CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "busan", "www.new.com");
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
@@ -162,7 +172,7 @@ class CompanyServiceTest {
     @DisplayName("기업 삭제 시 소유자가 아니면 예외가 발생한다")
     void deleteCompany_fail_notOwner() {
         // given
-        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER);
+        AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER, UserType.LOCAL);
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
         // when & then

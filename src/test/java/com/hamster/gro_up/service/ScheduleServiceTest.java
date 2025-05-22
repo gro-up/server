@@ -55,6 +55,17 @@ class ScheduleServiceTest {
     void setUp() {
         user = User.builder()
                 .id(1L)
+                .email("test@test.com")
+                .password("password")
+                .password("encoded_password")
+                .role(Role.ROLE_USER)
+                .build();
+
+        authUser = AuthUser.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .userType(user.getUserType())
                 .build();
 
         company = Company.builder()
@@ -76,8 +87,6 @@ class ScheduleServiceTest {
                 .position("백엔드")
                 .memo("메모입니다")
                 .build();
-
-        authUser = new AuthUser(1L, "ham@gmail.com", Role.ROLE_USER);
     }
 
     @Test
@@ -114,7 +123,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 조회 시 소유자가 아니면 예외가 발생한다")
     void findSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         given(scheduleRepository.findByIdWithCompany(schedule.getId())).willReturn(Optional.of(schedule));
 
         // when & then
@@ -194,7 +203,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 생성 시 소유자가 아니면 예외가 발생한다")
     void createSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
@@ -238,7 +247,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 수정 시 소유자가 아니면 예외가 발생한다")
     void updateSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
                 Step.DOCUMENT, LocalDateTime.now(), "백엔드", "메모 수정"
         );
@@ -267,7 +276,7 @@ class ScheduleServiceTest {
     @DisplayName("일정 삭제 시 소유자가 아니면 예외가 발생한다")
     void deleteSchedule_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         given(scheduleRepository.findById(schedule.getId())).willReturn(Optional.of(schedule));
 
         // when & then
