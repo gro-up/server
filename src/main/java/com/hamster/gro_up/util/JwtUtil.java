@@ -2,6 +2,7 @@ package com.hamster.gro_up.util;
 
 import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.entity.Role;
+import com.hamster.gro_up.entity.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -31,7 +32,7 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    public String createToken(TokenType tokenType, Long userId, String email, Role role) {
+    public String createToken(TokenType tokenType, UserType userType, Long userId, String email, Role role) {
         long currentTimeMillis = System.currentTimeMillis();
         Date expirationDate = new Date(currentTimeMillis + tokenType.getExpireMs()); // 만료일
         Date issuedAt = new Date(currentTimeMillis); // 발급일
@@ -41,6 +42,7 @@ public class JwtUtil {
                 .setSubject(String.valueOf(userId))
                 .claim("email", email)
                 .claim("role", role.name())
+                .claim("userType", userType.name())
                 .claim("tokenType", tokenType.name())
                 .setExpiration(expirationDate)
                 .setIssuedAt(issuedAt)
@@ -87,7 +89,8 @@ public class JwtUtil {
         Long userId = Long.valueOf(claims.getSubject());
         String email = claims.get("email", String.class);
         Role role = Role.of(claims.get("role", String.class));
+        UserType userType = UserType.of(claims.get("userType", String.class));
 
-        return AuthUser.builder().id(userId).email(email).role(role).build();
+        return AuthUser.builder().id(userId).email(email).role(role).userType(userType).build();
     }
 }
