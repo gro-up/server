@@ -5,10 +5,7 @@ import com.hamster.gro_up.dto.request.RetrospectCreateRequest;
 import com.hamster.gro_up.dto.request.RetrospectUpdateRequest;
 import com.hamster.gro_up.dto.response.RetrospectListResponse;
 import com.hamster.gro_up.dto.response.RetrospectResponse;
-import com.hamster.gro_up.entity.Retrospect;
-import com.hamster.gro_up.entity.Role;
-import com.hamster.gro_up.entity.Schedule;
-import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.entity.*;
 import com.hamster.gro_up.exception.ForbiddenException;
 import com.hamster.gro_up.exception.retrospect.RetrospectNotFoundException;
 import com.hamster.gro_up.exception.schedule.ScheduleNotFoundException;
@@ -57,6 +54,17 @@ class RetrospectServiceTest {
     void setUp() {
         user = User.builder()
                 .id(1L)
+                .email("test@test.com")
+                .password("password")
+                .password("encoded_password")
+                .role(Role.ROLE_USER)
+                .build();
+
+        authUser = AuthUser.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .userType(user.getUserType())
                 .build();
 
         schedule = Schedule.builder()
@@ -74,8 +82,6 @@ class RetrospectServiceTest {
                 .schedule(schedule)
                 .user(user)
                 .build();
-
-        authUser = new AuthUser(1L, "ham@gmail.com", Role.ROLE_USER);
     }
 
     @Test
@@ -113,7 +119,7 @@ class RetrospectServiceTest {
     @DisplayName("회고 조회 시 소유자가 아니면 예외가 발생한다")
     void findRetrospect_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         given(retrospectRepository.findByIdWithSchedule(retrospect.getId())).willReturn(Optional.of(retrospect));
 
         // when & then
@@ -209,7 +215,7 @@ class RetrospectServiceTest {
     @DisplayName("회고 수정 시 소유자가 아니면 예외가 발생한다")
     void updateRetrospect_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         RetrospectUpdateRequest updateRequest = new RetrospectUpdateRequest("수정된 메모");
         given(retrospectRepository.findById(retrospect.getId())).willReturn(Optional.of(retrospect));
 
@@ -236,7 +242,7 @@ class RetrospectServiceTest {
     @DisplayName("회고 삭제 시 소유자가 아니면 예외가 발생한다")
     void deleteRetrospect_fail_notOwner() {
         // given
-        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER);
+        AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         given(retrospectRepository.findById(retrospect.getId())).willReturn(Optional.of(retrospect));
 
         // when & then
