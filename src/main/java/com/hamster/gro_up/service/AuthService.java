@@ -207,4 +207,10 @@ public class AuthService {
 
         refreshTokenService.deleteRefreshToken(authUser.getEmail());
     }
+
+    public void checkEmailDuplicate(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateUserException();
+        }
+    }
 }

@@ -116,7 +116,7 @@ public class AuthController {
     }
 
     @Operation(summary = "비밀번호 검증")
-    @PostMapping("/password-check")
+    @PostMapping("/check-password")
     public ResponseEntity<ApiResponse<Void>> checkPassword(@AuthenticationPrincipal AuthUser authUser,
                                                            @Valid @RequestBody PasswordCheckRequest passwordCheckRequest) {
         authService.checkPassword(authUser, passwordCheckRequest);
@@ -140,9 +140,16 @@ public class AuthController {
 
     @Operation(summary = "비밀번호 재설정")
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> reset(@RequestParam String token,
+    public ResponseEntity<ApiResponse<Void>> reset(@RequestParam String email,
                                                    @Valid @RequestBody PasswordUpdateRequest passwordUpdateRequest) {
-        authService.resetPassword(token, passwordUpdateRequest);
+        authService.resetPasswordWithEmail(email, passwordUpdateRequest);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "이메일 중복 검사")
+    @GetMapping("/check-email")
+    public ResponseEntity<ApiResponse<Void>> checkEmailDuplicate(@RequestParam String email) {
+        authService.checkEmailDuplicate(email);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
