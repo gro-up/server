@@ -82,6 +82,7 @@ class AuthServiceTest {
                 .password("password")
                 .password("encoded_password")
                 .role(Role.ROLE_USER)
+                .userType(UserType.LOCAL)
                 .build();
 
         authUser = AuthUser.builder()
@@ -390,7 +391,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("비밀번호 재설정에 성공한다")
-    void resetPassword_success() {
+    void resetPassword_WithToken_success() {
         // given
         String token = "token123";
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
@@ -403,7 +404,7 @@ class AuthServiceTest {
         given(passwordEncoder.encode("new_password")).willReturn("encoded_new_password");
 
         // when & then
-        assertDoesNotThrow(() -> authService.resetPassword(token, req));
+        assertDoesNotThrow(() -> authService.resetPasswordWithToken(token, req));
         verify(userRepository).findById(1L);
         verify(passwordEncoder).encode("new_password");
         verify(redisTemplate).delete(token);
@@ -412,7 +413,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("비밀번호 재설정 시 잘못된 토큰이면 예외가 발생한다")
-    void resetPassword_fail_invalidToken() {
+    void resetPassword_WithToken_fail_invalidToken() {
         // given
         String token = "invalid_token";
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
@@ -422,7 +423,7 @@ class AuthServiceTest {
         given(redisTemplate.opsForValue()).willReturn(valueOps);
         given(valueOps.get(token)).willReturn(null);
 
-        assertThrows(InvalidTokenException.class, () -> authService.resetPassword(token, req));
+        assertThrows(InvalidTokenException.class, () -> authService.resetPasswordWithToken(token, req));
     }
 
     @Test
@@ -452,5 +453,77 @@ class AuthServiceTest {
 
         // when & then
         assertThrows(UserNotFoundException.class, () -> authService.updatePassword(anotherAuthUser, req));
+    }
+
+    @Test
+    @DisplayName("이메일 인증이 완료된 LOCAL 사용자는 비밀번호 재설정에 성공한다")
+    void resetPasswordWithEmail_success() {
+        // given
+        String email = "test@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        User user = mock(User.class);
+        given(user.getUserType()).willReturn(UserType.LOCAL);
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        given(passwordEncoder.encode("new_password")).willReturn("encoded_new_password");
+
+        // when & then
+        assertDoesNotThrow(() -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder).encode("new_password");
+        verify(user).updatePassword("encoded_new_password");
+    }
+
+    @Test
+    @DisplayName("이메일 인증이 안 된 경우 예외가 발생한다")
+    void resetPasswordWithEmail_fail_notVerified() {
+        // given
+        String email = "test@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(false);
+
+        // when & then
+        assertThrows(EmailNotVerifiedException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 요청 시 예외가 발생한다")
+    void resetPasswordWithEmail_fail_userNotFound() {
+        // given
+        String email = "notfound@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(UserNotFoundException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("OAUTH 사용자가 비밀번호 재설정 시도 시 예외가 발생한다")
+    void resetPasswordWithEmail_fail_notLocalUser() {
+        // given
+        String email = "oauth@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        User user = mock(User.class);
+        given(user.getUserType()).willReturn(UserType.OAUTH);
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+
+        // when & then
+        assertThrows(PasswordChangeNotAllowedException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+        verify(user).getUserType();
     }
 }
