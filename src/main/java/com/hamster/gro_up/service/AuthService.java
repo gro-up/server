@@ -179,7 +179,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void resetPassword(String token, PasswordUpdateRequest passwordUpdateRequest) {
+    public void resetPasswordWithToken(String token, PasswordUpdateRequest passwordUpdateRequest) {
         String userId = redisTemplate.opsForValue().get(token);
 
         if(userId == null) {
@@ -198,6 +198,23 @@ public class AuthService {
     }
 
     @Transactional
+    public void resetPasswordWithEmail(String email, PasswordUpdateRequest passwordUpdateRequest) {
+        if (!emailVerificationService.isEmailVerified(email)) {
+            throw new EmailNotVerifiedException();
+        }
+
+        User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+
+        if (user.getUserType() != UserType.LOCAL) {
+            throw new PasswordChangeNotAllowedException();
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(passwordUpdateRequest.getPassword());
+
+        user.updatePassword(encodedNewPassword);
+    }
+
+    @Transactional
     public void updatePassword(AuthUser authUser, PasswordUpdateRequest passwordUpdateRequest) {
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
 
@@ -206,5 +223,11 @@ public class AuthService {
         user.updatePassword(encodedPassword);
 
         refreshTokenService.deleteRefreshToken(authUser.getEmail());
+    }
+
+    public void checkEmailDuplicate(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateUserException();
+        }
     }
 }

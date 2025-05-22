@@ -55,7 +55,6 @@ class EmailVerificationServiceTest {
     void sendVerificationCode_success() {
         // given
         String email = "test@example.com";
-        given(userRepository.existsByEmail(email)).willReturn(false);
         given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
         // when
@@ -73,19 +72,6 @@ class EmailVerificationServiceTest {
         assertThat(message.getTo()).contains(email);
         assertThat(message.getSubject()).isEqualTo("이메일 인증 코드");
         assertThat(message.getText()).contains("인증 코드:");
-    }
-
-    @Test
-    @DisplayName("이미 가입된 이메일이면 예외가 발생한다")
-    void sendVerificationCode_fail_duplicate() {
-        // given
-        String email = "test@example.com";
-        given(userRepository.existsByEmail(email)).willReturn(true);
-
-        // when & then
-        assertThrows(DuplicateUserException.class, () -> emailVerificationService.sendVerificationCode(email));
-        verify(redisTemplate, never()).opsForValue();
-        verify(mailSender, never()).send(any(SimpleMailMessage.class));
     }
 
     @Test
