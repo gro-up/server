@@ -9,10 +9,7 @@ import com.hamster.gro_up.dto.request.SigninRequest;
 import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.entity.Role;
-import com.hamster.gro_up.exception.auth.ExpiredTokenException;
-import com.hamster.gro_up.exception.auth.InvalidCredentialsException;
-import com.hamster.gro_up.exception.auth.InvalidEmailVerificationTokenException;
-import com.hamster.gro_up.exception.auth.TokenTypeMismatchException;
+import com.hamster.gro_up.exception.auth.*;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
 import com.hamster.gro_up.service.AuthService;
@@ -35,8 +32,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = {AuthController.class})
@@ -82,8 +78,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
-                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
+                .andExpect(jsonPath("$.data").value(token.getAccessToken()))
+                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
     }
 
     @Test
@@ -101,8 +97,8 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value(token.getAccessToken()))
-                .andExpect(jsonPath("$.data.refreshToken").value(token.getRefreshToken()));
+                .andExpect(jsonPath("$.data").value(token.getAccessToken()))
+                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
     }
 
     @Test
@@ -138,7 +134,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("이메일 인증 코드 요청 시 이미 가입된 이메일이면 400을 반환한다")
+    @DisplayName("이메일 인증 코드 요청 시 이미 가입된 이메일이면 409를 반환한다")
     void sendVerificationCode_fail_duplicate() throws Exception {
         // given
         String email = "test@example.com";
@@ -148,8 +144,8 @@ class AuthControllerTest {
         // when & then
         mockMvc.perform(post("/api/auth/email/verify-request")
                         .param("email", email))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409))
                 .andExpect(jsonPath("$.message").value("이미 가입된 이메일입니다."));
     }
 
@@ -240,8 +236,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
-                .andExpect(jsonPath("$.data.accessToken").value("newAccessToken"))
-                .andExpect(jsonPath("$.data.refreshToken").value("newRefreshToken"))
+                .andExpect(jsonPath("$.data").value("newAccessToken"))
                 .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "newRefreshToken"));
     }
 
@@ -322,7 +317,7 @@ class AuthControllerTest {
         PasswordCheckRequest request = new PasswordCheckRequest("password123");
 
         // when & then
-        mockMvc.perform(post("/api/auth/password-check")
+        mockMvc.perform(post("/api/auth/check-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -342,7 +337,7 @@ class AuthControllerTest {
         doThrow(new InvalidCredentialsException()).when(authService).checkPassword(any(AuthUser.class), any(PasswordCheckRequest.class));
 
         // when & then
-        mockMvc.perform(post("/api/auth/password-check")
+        mockMvc.perform(post("/api/auth/check-password")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
@@ -399,16 +394,53 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(404));
     }
 
+//    @Test
+//    @DisplayName("비밀번호 재설정에 성공한다")
+//    void reset_success() throws Exception {
+//        // given
+//        String token = "reset-token";
+//        PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
+//
+//        // when & then
+//        mockMvc.perform(post("/api/auth/reset-password")
+//                        .param("token", token)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(new ObjectMapper().writeValueAsString(request)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.code").value(200))
+//                .andExpect(jsonPath("$.status").value("OK"))
+//                .andExpect(jsonPath("$.data").doesNotExist());
+//
+//        verify(authService).resetPasswordWithToken(eq(token), any(PasswordUpdateRequest.class));
+//    }
+
+//    @Test
+//    @DisplayName("만료된 토큰으로 비밀번호 재설정 시 401을 반환한다")
+//    void reset_fail_expiredToken() throws Exception {
+//        // given
+//        String token = "expired-token";
+//        PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
+//        doThrow(new ExpiredTokenException()).when(authService).resetPasswordWithToken(eq(token), any(PasswordUpdateRequest.class));
+//
+//        // when & then
+//        mockMvc.perform(post("/api/auth/reset-password")
+//                        .param("token", token)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(new ObjectMapper().writeValueAsString(request)))
+//                .andExpect(status().isUnauthorized())
+//                .andExpect(jsonPath("$.code").value(401));
+//    }
+
     @Test
     @DisplayName("비밀번호 재설정에 성공한다")
-    void reset_success() throws Exception {
+    void resetPasswordWithEmail_success() throws Exception {
         // given
-        String token = "reset-token";
+        String email = "ham@example.com";
         PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
 
         // when & then
         mockMvc.perform(post("/api/auth/reset-password")
-                        .param("token", token)
+                        .param("email", email)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -416,23 +448,88 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data").doesNotExist());
 
-        verify(authService).resetPassword(eq(token), any(PasswordUpdateRequest.class));
+        verify(authService).resetPasswordWithEmail(eq(email), any(PasswordUpdateRequest.class));
     }
 
     @Test
-    @DisplayName("만료된 토큰으로 비밀번호 재설정 시 401을 반환한다")
-    void reset_fail_expiredToken() throws Exception {
+    @DisplayName("이메일 인증이 안 된 경우 403을 반환한다")
+    void resetPasswordWithEmail_fail_notVerified() throws Exception {
         // given
-        String token = "expired-token";
+        String email = "ham@example.com";
         PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
-        doThrow(new ExpiredTokenException()).when(authService).resetPassword(eq(token), any(PasswordUpdateRequest.class));
+        doThrow(new EmailNotVerifiedException()).when(authService).resetPasswordWithEmail(eq(email), any(PasswordUpdateRequest.class));
 
         // when & then
         mockMvc.perform(post("/api/auth/reset-password")
-                        .param("token", token)
+                        .param("email", email)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(401));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 비밀번호 재설정 시 404를 반환한다")
+    void resetPasswordWithEmail_fail_userNotFound() throws Exception {
+        // given
+        String email = "notfound@example.com";
+        PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
+        doThrow(new UserNotFoundException()).when(authService).resetPasswordWithEmail(eq(email), any(PasswordUpdateRequest.class));
+
+        // when & then
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
+
+    @Test
+    @DisplayName("OAUTH 사용자가 비밀번호 재설정 시도 시 403을 반환한다")
+    void resetPasswordWithEmail_fail_notLocalUser() throws Exception {
+        // given
+        String email = "oauth@example.com";
+        PasswordUpdateRequest request = new PasswordUpdateRequest("newPassword123");
+        doThrow(new PasswordChangeNotAllowedException()).when(authService).resetPasswordWithEmail(eq(email), any(PasswordUpdateRequest.class));
+
+        // when & then
+        mockMvc.perform(post("/api/auth/reset-password")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    @DisplayName("이메일 중복이 없으면 200 OK를 반환한다")
+    void checkEmailDuplicate_success() throws Exception {
+        // given
+        String email = "unique@example.com";
+
+        // when & then
+        mockMvc.perform(get("/api/auth/check-email")
+                        .param("email", email))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(authService).checkEmailDuplicate(email);
+    }
+
+    @Test
+    @DisplayName("이메일이 중복되면 409를 반환한다")
+    void checkEmailDuplicate_fail_duplicate() throws Exception {
+        // given
+        String email = "duplicate@example.com";
+        doThrow(new DuplicateUserException()).when(authService).checkEmailDuplicate(email);
+
+        // when & then
+        mockMvc.perform(get("/api/auth/check-email")
+                        .param("email", email))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409));
     }
 }

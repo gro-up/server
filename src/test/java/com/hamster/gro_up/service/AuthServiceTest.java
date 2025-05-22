@@ -8,6 +8,7 @@ import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.entity.UserType;
 import com.hamster.gro_up.exception.auth.*;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
@@ -68,6 +69,7 @@ class AuthServiceTest {
     private SignupRequest signupRequest;
     private SigninRequest signinRequest;
     private User user;
+    private AuthUser authUser;
 
     @BeforeEach
     void setup() {
@@ -80,6 +82,14 @@ class AuthServiceTest {
                 .password("password")
                 .password("encoded_password")
                 .role(Role.ROLE_USER)
+                .userType(UserType.LOCAL)
+                .build();
+
+        authUser = AuthUser.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .userType(user.getUserType())
                 .build();
     }
 
@@ -90,8 +100,8 @@ class AuthServiceTest {
         given(userRepository.existsByEmail(signupRequest.getEmail())).willReturn(false);
         given(passwordEncoder.encode(signupRequest.getPassword())).willReturn("encoded_password");
         given(userRepository.save(any(User.class))).willReturn(user);
-        given(jwtUtil.createToken(eq(TokenType.ACCESS), anyLong(), anyString(), any(Role.class))).willReturn("Access Token");
-        given(jwtUtil.createToken(eq(TokenType.REFRESH), anyLong(), anyString(), any(Role.class))).willReturn("Refresh Token");
+        given(jwtUtil.createToken(eq(TokenType.ACCESS), eq(UserType.LOCAL),anyLong(), anyString(), any(Role.class))).willReturn("Access Token");
+        given(jwtUtil.createToken(eq(TokenType.REFRESH), eq(UserType.LOCAL),anyLong(), anyString(), any(Role.class))).willReturn("Refresh Token");
         given(emailVerificationService.isEmailVerified(signupRequest.getEmail())).willReturn(true);
 
         // when
@@ -121,8 +131,8 @@ class AuthServiceTest {
         // given
         given(userRepository.findByEmail(signinRequest.getEmail())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())).willReturn(true);
-        given(jwtUtil.createToken(eq(TokenType.ACCESS), anyLong(), anyString(), any(Role.class))).willReturn("Access Token");
-        given(jwtUtil.createToken(eq(TokenType.REFRESH), anyLong(), anyString(), any(Role.class))).willReturn("Refresh Token");
+        given(jwtUtil.createToken(eq(TokenType.ACCESS), eq(UserType.LOCAL), anyLong(), anyString(), any(Role.class))).willReturn("Access Token");
+        given(jwtUtil.createToken(eq(TokenType.REFRESH), eq(UserType.LOCAL), anyLong(), anyString(), any(Role.class))).willReturn("Refresh Token");
 
         // when
         TokenResponse response = authService.signIn(signinRequest);
@@ -215,20 +225,15 @@ class AuthServiceTest {
     void reissueAccessToken_success() {
         // given
         String refreshToken = "validRefreshToken";
-        AuthUser authUser = mock(AuthUser.class);
-        String email = "test@example.com";
         String newAccessToken = "newAccessToken";
         String newRefreshToken = "newRefreshToken";
 
         given(jwtUtil.isExpired(refreshToken)).willReturn(false);
         given(jwtUtil.getTokenType(refreshToken)).willReturn(TokenType.REFRESH.name());
         given(jwtUtil.getAuthUserFromToken(refreshToken)).willReturn(authUser);
-        given(authUser.getEmail()).willReturn(email);
-        given(refreshTokenService.getRefreshToken(email)).willReturn(refreshToken);
-        given(authUser.getId()).willReturn(1L);
-        given(authUser.getRole()).willReturn(Role.ROLE_USER);
-        given(jwtUtil.createToken(eq(TokenType.ACCESS), anyLong(), anyString(), any(Role.class))).willReturn(newAccessToken);
-        given(jwtUtil.createToken(eq(TokenType.REFRESH), anyLong(), anyString(), any(Role.class))).willReturn(newRefreshToken);
+        given(refreshTokenService.getRefreshToken(authUser.getEmail())).willReturn(refreshToken);
+        given(jwtUtil.createToken(eq(TokenType.ACCESS), any(), anyLong(), anyString(), any(Role.class))).willReturn(newAccessToken);
+        given(jwtUtil.createToken(eq(TokenType.REFRESH), any(), anyLong(), anyString(), any(Role.class))).willReturn(newRefreshToken);
 
         // when
         TokenResponse response = authService.reissueAccessToken(refreshToken);
@@ -236,8 +241,8 @@ class AuthServiceTest {
         // then
         assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
         assertThat(response.getRefreshToken()).isEqualTo(newRefreshToken);
-        verify(refreshTokenService).deleteRefreshToken(email);
-        verify(refreshTokenService).saveRefreshToken(newRefreshToken, email);
+        verify(refreshTokenService).deleteRefreshToken(authUser.getEmail());
+        verify(refreshTokenService).saveRefreshToken(newRefreshToken, authUser.getEmail());
     }
 
     @Test
@@ -275,14 +280,11 @@ class AuthServiceTest {
     void reissueAccessToken_fail_tokenNotFound() {
         // given
         String refreshToken = "validRefreshToken";
-        AuthUser authUser = mock(AuthUser.class);
-        String email = "test@example.com";
 
         given(jwtUtil.isExpired(refreshToken)).willReturn(false);
         given(jwtUtil.getTokenType(refreshToken)).willReturn(TokenType.REFRESH.name());
         given(jwtUtil.getAuthUserFromToken(refreshToken)).willReturn(authUser);
-        given(authUser.getEmail()).willReturn(email);
-        given(refreshTokenService.getRefreshToken(email)).willReturn(null);
+        given(refreshTokenService.getRefreshToken(authUser.getEmail())).willReturn(null);
 
         // when & then
         assertThrows(TokenNotFoundException.class, () -> authService.reissueAccessToken(refreshToken));
@@ -294,14 +296,11 @@ class AuthServiceTest {
         // given
         String refreshToken = "requestToken";
         String storedToken = "storedToken";
-        AuthUser authUser = mock(AuthUser.class);
-        String email = "test@example.com";
 
         given(jwtUtil.isExpired(refreshToken)).willReturn(false);
         given(jwtUtil.getTokenType(refreshToken)).willReturn(TokenType.REFRESH.name());
         given(jwtUtil.getAuthUserFromToken(refreshToken)).willReturn(authUser);
-        given(authUser.getEmail()).willReturn(email);
-        given(refreshTokenService.getRefreshToken(email)).willReturn(storedToken);
+        given(refreshTokenService.getRefreshToken(authUser.getEmail())).willReturn(storedToken);
 
         // when & then
         InvalidTokenException exception = assertThrows(InvalidTokenException.class, () -> authService.reissueAccessToken(refreshToken));
@@ -312,7 +311,6 @@ class AuthServiceTest {
     @DisplayName("계정 삭제에 성공하면 토큰 삭제 및 유저 삭제가 호출된다")
     void deleteAccount_success() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@example.com", Role.ROLE_USER);
         given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
 
         // when
@@ -328,7 +326,6 @@ class AuthServiceTest {
     @DisplayName("존재하지 않는 유저라면 예외가 발생한다")
     void deleteAccount_userNotFound() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@example.com", Role.ROLE_USER);
         given(userRepository.findById(authUser.getId())).willReturn(Optional.empty());
 
         // when & then
@@ -341,7 +338,6 @@ class AuthServiceTest {
     @DisplayName("비밀번호 검증에 성공한다")
     void checkPassword_success() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
         PasswordCheckRequest req = new PasswordCheckRequest("plain_password");
         given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
         given(passwordEncoder.matches("plain_password", user.getPassword())).willReturn(true);
@@ -356,7 +352,6 @@ class AuthServiceTest {
     @DisplayName("비밀번호 검증 실패 시 예외가 발생한다")
     void checkPassword_fail_invalid() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
         PasswordCheckRequest req = new PasswordCheckRequest("wrong_password");
         given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
         given(passwordEncoder.matches("wrong_password", user.getPassword())).willReturn(false);
@@ -396,7 +391,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("비밀번호 재설정에 성공한다")
-    void resetPassword_success() {
+    void resetPassword_WithToken_success() {
         // given
         String token = "token123";
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
@@ -409,7 +404,7 @@ class AuthServiceTest {
         given(passwordEncoder.encode("new_password")).willReturn("encoded_new_password");
 
         // when & then
-        assertDoesNotThrow(() -> authService.resetPassword(token, req));
+        assertDoesNotThrow(() -> authService.resetPasswordWithToken(token, req));
         verify(userRepository).findById(1L);
         verify(passwordEncoder).encode("new_password");
         verify(redisTemplate).delete(token);
@@ -418,7 +413,7 @@ class AuthServiceTest {
 
     @Test
     @DisplayName("비밀번호 재설정 시 잘못된 토큰이면 예외가 발생한다")
-    void resetPassword_fail_invalidToken() {
+    void resetPassword_WithToken_fail_invalidToken() {
         // given
         String token = "invalid_token";
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
@@ -428,14 +423,13 @@ class AuthServiceTest {
         given(redisTemplate.opsForValue()).willReturn(valueOps);
         given(valueOps.get(token)).willReturn(null);
 
-        assertThrows(InvalidTokenException.class, () -> authService.resetPassword(token, req));
+        assertThrows(InvalidTokenException.class, () -> authService.resetPasswordWithToken(token, req));
     }
 
     @Test
     @DisplayName("로그인 상태에서 비밀번호 변경에 성공한다")
     void updatePassword_success() {
         // given
-        AuthUser authUser = new AuthUser(1L, "test@test.com", Role.ROLE_USER);
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
 
         given(userRepository.findById(authUser.getId())).willReturn(Optional.of(user));
@@ -452,12 +446,84 @@ class AuthServiceTest {
     @DisplayName("로그인 상태에서 비밀번호 변경 시 해당 사용자가 없으면 예외가 발생한다")
     void updatePassword_fail_userNotFound() {
         // given
-        AuthUser authUser = new AuthUser(2L, "notfound@test.com", Role.ROLE_USER);
+        AuthUser anotherAuthUser = new AuthUser(2L, "notfound@test.com", Role.ROLE_USER, UserType.LOCAL);
         PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
 
-        given(userRepository.findById(authUser.getId())).willReturn(Optional.empty());
+        given(userRepository.findById(anotherAuthUser.getId())).willReturn(Optional.empty());
 
         // when & then
-        assertThrows(UserNotFoundException.class, () -> authService.updatePassword(authUser, req));
+        assertThrows(UserNotFoundException.class, () -> authService.updatePassword(anotherAuthUser, req));
+    }
+
+    @Test
+    @DisplayName("이메일 인증이 완료된 LOCAL 사용자는 비밀번호 재설정에 성공한다")
+    void resetPasswordWithEmail_success() {
+        // given
+        String email = "test@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        User user = mock(User.class);
+        given(user.getUserType()).willReturn(UserType.LOCAL);
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        given(passwordEncoder.encode("new_password")).willReturn("encoded_new_password");
+
+        // when & then
+        assertDoesNotThrow(() -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder).encode("new_password");
+        verify(user).updatePassword("encoded_new_password");
+    }
+
+    @Test
+    @DisplayName("이메일 인증이 안 된 경우 예외가 발생한다")
+    void resetPasswordWithEmail_fail_notVerified() {
+        // given
+        String email = "test@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(false);
+
+        // when & then
+        assertThrows(EmailNotVerifiedException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 요청 시 예외가 발생한다")
+    void resetPasswordWithEmail_fail_userNotFound() {
+        // given
+        String email = "notfound@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+
+        // when & then
+        assertThrows(UserNotFoundException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+    }
+
+    @Test
+    @DisplayName("OAUTH 사용자가 비밀번호 재설정 시도 시 예외가 발생한다")
+    void resetPasswordWithEmail_fail_notLocalUser() {
+        // given
+        String email = "oauth@test.com";
+        PasswordUpdateRequest req = new PasswordUpdateRequest("new_password");
+
+        User user = mock(User.class);
+        given(user.getUserType()).willReturn(UserType.OAUTH);
+
+        given(emailVerificationService.isEmailVerified(email)).willReturn(true);
+        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+
+        // when & then
+        assertThrows(PasswordChangeNotAllowedException.class, () -> authService.resetPasswordWithEmail(email, req));
+        verify(emailVerificationService).isEmailVerified(email);
+        verify(userRepository).findByEmail(email);
+        verify(user).getUserType();
     }
 }

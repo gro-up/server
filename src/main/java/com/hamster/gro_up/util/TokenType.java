@@ -1,7 +1,7 @@
 package com.hamster.gro_up.util;
 
 public enum TokenType {
-    ACCESS(3 * 60 * 1000L),         // 3분 TODO: 개발용으로 임시
+    ACCESS(60 * 60 * 1000L),         // 1시간
     REFRESH(14 * 24 * 60 * 60 * 1000L); // 2주
 
     private final long expireMs;

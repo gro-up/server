@@ -8,6 +8,7 @@ import com.hamster.gro_up.dto.request.SignupRequest;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.entity.User;
+import com.hamster.gro_up.entity.UserType;
 import com.hamster.gro_up.exception.auth.*;
 import com.hamster.gro_up.exception.user.DuplicateUserException;
 import com.hamster.gro_up.exception.user.UserNotFoundException;
@@ -60,12 +61,13 @@ public class AuthService {
                 .email(signupRequest.getEmail())
                 .password(encodedPassword)
                 .role(Role.ROLE_USER)
+                .userType(UserType.LOCAL)
                 .build();
 
         User savedUser = userRepository.save(user);
 
-        String accessToken = jwtUtil.createToken(TokenType.ACCESS, savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
-        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+        String accessToken = jwtUtil.createToken(TokenType.ACCESS, UserType.LOCAL, savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
+        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, UserType.LOCAL, savedUser.getId(), savedUser.getEmail(), savedUser.getRole());
 
         refreshTokenService.saveRefreshToken(refreshToken, savedUser.getEmail());
 
@@ -80,8 +82,8 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
-        String accessToken = jwtUtil.createToken(TokenType.ACCESS, user.getId(), user.getEmail(), user.getRole());
-        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, user.getId(), user.getEmail(), user.getRole());
+        String accessToken = jwtUtil.createToken(TokenType.ACCESS, UserType.LOCAL, user.getId(), user.getEmail(), user.getRole());
+        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, UserType.LOCAL, user.getId(), user.getEmail(), user.getRole());
 
         refreshTokenService.saveRefreshToken(refreshToken, user.getEmail());
 
@@ -132,8 +134,8 @@ public class AuthService {
             throw new InvalidTokenException("Refresh Token 이 일치하지 않습니다.");
         }
 
-        String newAccessToken = jwtUtil.createToken(TokenType.ACCESS, authUser.getId(), email, authUser.getRole());
-        String newRefreshToken = jwtUtil.createToken(TokenType.REFRESH, authUser.getId(), email, authUser.getRole());
+        String newAccessToken = jwtUtil.createToken(TokenType.ACCESS, authUser.getUserType(), authUser.getId(), email, authUser.getRole());
+        String newRefreshToken = jwtUtil.createToken(TokenType.REFRESH, authUser.getUserType(), authUser.getId(), email, authUser.getRole());
 
         // Refresh Token Rotation (RTR)
         refreshTokenService.deleteRefreshToken(email);
@@ -177,7 +179,7 @@ public class AuthService {
     }
 
     @Transactional
-    public void resetPassword(String token, PasswordUpdateRequest passwordUpdateRequest) {
+    public void resetPasswordWithToken(String token, PasswordUpdateRequest passwordUpdateRequest) {
         String userId = redisTemplate.opsForValue().get(token);
 
         if(userId == null) {
@@ -196,6 +198,23 @@ public class AuthService {
     }
 
     @Transactional
+    public void resetPasswordWithEmail(String email, PasswordUpdateRequest passwordUpdateRequest) {
+        if (!emailVerificationService.isEmailVerified(email)) {
+            throw new EmailNotVerifiedException();
+        }
+
+        User user = userRepository.findByEmail(email).orElseThrow(UserNotFoundException::new);
+
+        if (user.getUserType() != UserType.LOCAL) {
+            throw new PasswordChangeNotAllowedException();
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(passwordUpdateRequest.getPassword());
+
+        user.updatePassword(encodedNewPassword);
+    }
+
+    @Transactional
     public void updatePassword(AuthUser authUser, PasswordUpdateRequest passwordUpdateRequest) {
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
 
@@ -204,5 +223,11 @@ public class AuthService {
         user.updatePassword(encodedPassword);
 
         refreshTokenService.deleteRefreshToken(authUser.getEmail());
+    }
+
+    public void checkEmailDuplicate(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateUserException();
+        }
     }
 }

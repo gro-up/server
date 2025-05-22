@@ -1,6 +1,7 @@
 package com.hamster.gro_up.dto;
 
 import com.hamster.gro_up.entity.Role;
+import com.hamster.gro_up.entity.UserType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +20,7 @@ public class AuthUser {
     private Long id;
     private String email;
     private Role role;
+    private UserType userType;
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();

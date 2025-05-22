@@ -5,9 +5,12 @@ import com.hamster.gro_up.dto.ApiResponse;
 import com.hamster.gro_up.dto.CustomOAuth2User;
 import com.hamster.gro_up.dto.response.TokenResponse;
 import com.hamster.gro_up.entity.Role;
+import com.hamster.gro_up.entity.UserType;
+import com.hamster.gro_up.util.CookieUtil;
 import com.hamster.gro_up.util.JwtUtil;
 import com.hamster.gro_up.util.TokenType;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,13 +35,15 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
         Long userId = customOAuth2User.getId();
         String email = customOAuth2User.getAttribute("email");
 
-        String accessToken = jwtUtil.createToken(TokenType.ACCESS, userId, email, Role.ROLE_USER);
-        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, userId, email, Role.ROLE_USER);
+        String accessToken = jwtUtil.createToken(TokenType.ACCESS, UserType.OAUTH, userId, email, Role.ROLE_USER);
+        String refreshToken = jwtUtil.createToken(TokenType.REFRESH, UserType.OAUTH, userId, email, Role.ROLE_USER);
 
-        TokenResponse tokenResponse = TokenResponse.of(accessToken, refreshToken);
+        ApiResponse<String> apiResponse = ApiResponse.of(HttpStatus.OK, accessToken);
 
-        ApiResponse<TokenResponse> apiResponse = ApiResponse.of(HttpStatus.OK, tokenResponse);
+        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken);
 
+        // Refresh Token 은 Cookie 에, Access Token 은 Body 에 담음
+        response.addCookie(refreshTokenCookie);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));

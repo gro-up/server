@@ -29,13 +29,8 @@ public class EmailVerificationService {
     private static final long VERIFICATION_CODE_TTL_MINUTES = 10L;
 
     public void sendVerificationCode(String email) {
-
-        if (userRepository.existsByEmail(email)) {
-            throw new DuplicateUserException("이미 가입된 이메일입니다.");
-        }
-
-        // 6자리 숫자 코드 생성
-        String code = String.format("%06d", new Random().nextInt(999999));
+        // 4자리 숫자 코드 생성
+        String code = String.format("%04d", new Random().nextInt(9999));
 
         // Redis 에 인증번호 저장 (key: email_verification:{email}, value: code)
         String key = VERIFICATION_PREFIX + email;
