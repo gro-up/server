@@ -5,6 +5,7 @@ import com.hamster.gro_up.config.*;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
+import com.hamster.gro_up.dto.response.CompanyNameListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.entity.Role;
 import com.hamster.gro_up.exception.company.CompanyNotFoundException;
@@ -195,5 +196,26 @@ class CompanyControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.message").isNotEmpty())
                 .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("모든 기업명 조회에 성공한다")
+    @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
+    void findAllCompanyNames_success() throws Exception {
+        // given
+        List<String> companyNames = List.of("네이버", "카카오", "라인");
+        CompanyNameListResponse response = CompanyNameListResponse.of(companyNames);
+        given(companyService.findAllCompanyNames(any())).willReturn(response);
+
+        // when & then
+        mockMvc.perform(get("/api/companies/names"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.status").value("OK"))
+                .andExpect(jsonPath("$.message").value("OK"))
+                .andExpect(jsonPath("$.data.companyNameList").isArray())
+                .andExpect(jsonPath("$.data.companyNameList[0]").value("네이버"))
+                .andExpect(jsonPath("$.data.companyNameList[1]").value("카카오"))
+                .andExpect(jsonPath("$.data.companyNameList[2]").value("라인"));
     }
 }

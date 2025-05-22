@@ -5,6 +5,7 @@ import com.hamster.gro_up.dto.AuthUser;
 import com.hamster.gro_up.dto.request.CompanyCreateRequest;
 import com.hamster.gro_up.dto.request.CompanyUpdateRequest;
 import com.hamster.gro_up.dto.response.CompanyListResponse;
+import com.hamster.gro_up.dto.response.CompanyNameListResponse;
 import com.hamster.gro_up.dto.response.CompanyResponse;
 import com.hamster.gro_up.service.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,5 +61,12 @@ public class CompanyController {
                                                            @PathVariable Long companyId) {
         companyService.deleteCompany(authUser, companyId);
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "모든 기업명 조회")
+    @GetMapping("/names")
+    public ResponseEntity<ApiResponse<CompanyNameListResponse>> findAllCompanyNames(@AuthenticationPrincipal AuthUser authUser) {
+        CompanyNameListResponse response = companyService.findAllCompanyNames(authUser);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
