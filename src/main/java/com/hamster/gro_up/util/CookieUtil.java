@@ -21,7 +21,7 @@ public class CookieUtil {
         cookie.setMaxAge(0);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(false);
         return cookie;
     }
 
@@ -30,7 +30,7 @@ public class CookieUtil {
         cookie.setMaxAge(maxAge);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
-        cookie.setSecure(true); // 운영환경에서만 true
+        cookie.setSecure(false); // 운영환경에서만 true
         return cookie;
     }
 
