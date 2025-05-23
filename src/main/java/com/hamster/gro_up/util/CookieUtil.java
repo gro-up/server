@@ -2,6 +2,8 @@ package com.hamster.gro_up.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 
 public class CookieUtil {
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh";
@@ -16,7 +18,7 @@ public class CookieUtil {
         return null;
     }
 
-    public static Cookie createExpiredCookie(String name) {
+    public static Cookie createExpiredRefreshTokenCookie(String name) {
         Cookie cookie = new Cookie(name, null);
         cookie.setMaxAge(0);
         cookie.setPath("/");
@@ -35,6 +37,28 @@ public class CookieUtil {
     }
 
     public static Cookie createRefreshTokenCookie(String refreshToken){
-        return CookieUtil.createCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, refreshToken, 60 * 60 * 24 * 14); // 2주
+        return CookieUtil.createCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, 60 * 60 * 24 * 14); // 2주
+    }
+
+    public static void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(60 * 60 * 24 * 14)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    public static void addExpiredRefreshTokenCookie(HttpServletResponse response) {
+        ResponseCookie expiredCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+        response.addHeader("Set-Cookie", expiredCookie.toString());
     }
 }

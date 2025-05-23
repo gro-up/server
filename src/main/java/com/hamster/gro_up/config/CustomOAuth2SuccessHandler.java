@@ -40,10 +40,9 @@ public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHa
 
         ApiResponse<String> apiResponse = ApiResponse.of(HttpStatus.OK, accessToken);
 
-        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken);
-
         // Refresh Token 은 Cookie 에, Access Token 은 Body 에 담음
-        response.addCookie(refreshTokenCookie);
+        CookieUtil.addRefreshTokenCookie(response, refreshToken);
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
