@@ -81,7 +81,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data").value(token.getAccessToken()))
-                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")));
+                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")))
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
     }
 
     @Test
@@ -100,7 +101,8 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data").value(token.getAccessToken()))
-                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")));
+                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")))
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Lax")));
     }
 
     @Test
