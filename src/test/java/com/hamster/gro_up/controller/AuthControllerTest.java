@@ -17,6 +17,7 @@ import com.hamster.gro_up.service.CustomOAuth2UserService;
 import com.hamster.gro_up.service.EmailVerificationService;
 import com.hamster.gro_up.util.CookieUtil;
 import com.hamster.gro_up.util.JwtUtil;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockCookie;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -68,7 +70,7 @@ class AuthControllerTest {
     void signUp_success() throws Exception {
         // given
         SignupRequest signupRequest = new SignupRequest("test@test.com", "password");
-        TokenResponse token = new TokenResponse("Access Token", "Refresh Token");
+        TokenResponse token = new TokenResponse("AccessToken", "RefreshToken");
         given(authService.signUp(any(SignupRequest.class))).willReturn(token);
 
         // when & then
@@ -79,7 +81,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data").value(token.getAccessToken()))
-                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
+                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")));
     }
 
     @Test
@@ -87,7 +89,7 @@ class AuthControllerTest {
     void signIn_success() throws Exception {
         // given
         SigninRequest signinRequest = new SigninRequest("test@test.com", "password");
-        TokenResponse token = new TokenResponse("Access Token", "Refresh Token");
+        TokenResponse token = new TokenResponse("AccessToken", "RefreshToken");
         given(authService.signIn(any(SigninRequest.class))).willReturn(token);
 
         // when & then
@@ -98,7 +100,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.status").value("OK"))
                 .andExpect(jsonPath("$.data").value(token.getAccessToken()))
-                .andExpect(cookie().value(CookieUtil.REFRESH_TOKEN_COOKIE_NAME, "Refresh Token"));
+                .andExpect(header().string("Set-Cookie", containsString("refresh=RefreshToken")));
     }
 
     @Test
