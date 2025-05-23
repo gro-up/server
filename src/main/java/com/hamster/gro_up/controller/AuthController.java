@@ -34,29 +34,27 @@ public class AuthController {
     @Operation(summary = "일반 회원가입")
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignupRequest signupRequest, HttpServletResponse servletResponse) {
-        TokenResponse response = authService.signUp(signupRequest);
+        TokenResponse tokenResponse = authService.signUp(signupRequest);
 
-        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-        servletResponse.addCookie(refreshTokenCookie);
+        CookieUtil.addRefreshTokenCookie(servletResponse, tokenResponse.getRefreshToken());
 
         // body 에는 Access Token 만 담고 Refresh Token 은 쿠키에 담음
-        return ResponseEntity.ok(ApiResponse.ok(response.getAccessToken()));
+        return ResponseEntity.ok(ApiResponse.ok(tokenResponse.getAccessToken()));
     }
 
     @Operation(summary = "일반 로그인")
     @PostMapping("/signin")
     public ResponseEntity<ApiResponse<String>> signIn(@Valid @RequestBody SigninRequest signinRequest, HttpServletResponse servletResponse) {
-        TokenResponse response = authService.signIn(signinRequest);
+        TokenResponse tokenResponse = authService.signIn(signinRequest);
 
-        Cookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-        servletResponse.addCookie(refreshTokenCookie);
+        CookieUtil.addRefreshTokenCookie(servletResponse, tokenResponse.getRefreshToken());
 
-        return ResponseEntity.ok(ApiResponse.ok(response.getAccessToken()));
+        return ResponseEntity.ok(ApiResponse.ok(tokenResponse.getAccessToken()));
     }
 
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse servletResponse) {
         String refreshToken = CookieUtil.extractCookie(request, "refresh");
 
         if (refreshToken == null) {
@@ -68,8 +66,7 @@ public class AuthController {
         authService.signOut(refreshToken);
 
         // refresh 쿠키 만료(삭제)
-        Cookie expiredCookie = CookieUtil.createExpiredCookie(CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
-        response.addCookie(expiredCookie);
+        CookieUtil.addExpiredRefreshTokenCookie(servletResponse);
 
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
@@ -90,7 +87,7 @@ public class AuthController {
 
     @Operation(summary = "토큰 재발급")
     @PostMapping("/reissue")
-    public ResponseEntity<ApiResponse<String>> reissue(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<String>> reissue(HttpServletRequest request, HttpServletResponse servletResponse) {
         String refreshToken = CookieUtil.extractCookie(request, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
 
         if (refreshToken == null) {
@@ -102,16 +99,18 @@ public class AuthController {
         TokenResponse tokenResponse = authService.reissueAccessToken(refreshToken);
 
         // 새 Refresh Token 을 쿠키에 저장 (Refresh Token Rotation)
-        Cookie newRefreshTokenCookie = CookieUtil.createRefreshTokenCookie(tokenResponse.getRefreshToken());
-        response.addCookie(newRefreshTokenCookie);
+        CookieUtil.addRefreshTokenCookie(servletResponse, tokenResponse.getRefreshToken());
 
         return ResponseEntity.ok(ApiResponse.ok(tokenResponse.getAccessToken()));
     }
 
     @Operation(summary = "계정 삭제")
     @DeleteMapping("/account")
-    public ResponseEntity<ApiResponse<Void>> deleteAccount(@AuthenticationPrincipal AuthUser authUser) {
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(@AuthenticationPrincipal AuthUser authUser, HttpServletResponse servletResponse) {
         authService.deleteAccount(authUser);
+
+        CookieUtil.addExpiredRefreshTokenCookie(servletResponse);
+
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
