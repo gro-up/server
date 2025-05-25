@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 public class ScheduleResponse {
 
+    private Long scheduleId;
+
     private Long companyId;
 
     private String companyName;
@@ -32,6 +34,7 @@ public class ScheduleResponse {
         Long companyId = (schedule.getCompany() != null) ? schedule.getCompany().getId() : null;
 
         return new ScheduleResponse(
+                schedule.getId(),
                 companyId,
                 schedule.getCompanyName(),
                 schedule.getCompanyLocation(),
