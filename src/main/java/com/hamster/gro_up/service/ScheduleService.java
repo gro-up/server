@@ -54,7 +54,7 @@ public class ScheduleService {
         String companyName;
         String companyLocation;
 
-        if(request.getCompanyId() != null) {
+        if (request.getCompanyId() != null) {
             company = companyRepository.findById(request.getCompanyId())
                     .orElseThrow(CompanyNotFoundException::new);
 
@@ -62,7 +62,7 @@ public class ScheduleService {
 
             companyName = company.getCompanyName();
             companyLocation = company.getLocation();
-        }else {
+        } else {
             companyName = request.getCompanyName();
             companyLocation = request.getCompanyLocation();
         }
@@ -91,7 +91,25 @@ public class ScheduleService {
 
         schedule.validateOwner(authUser.getId());
 
+        Company company = null;
+
+        Long companyId = scheduleUpdateRequest.getCompanyId();
+        String companyName = scheduleUpdateRequest.getCompanyName();
+        String companyLocation = scheduleUpdateRequest.getCompanyLocation();
+
+        if (companyId != null) {
+            company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
+
+            company.validateOwner(authUser.getId());
+
+            companyName = company.getCompanyName();
+            companyLocation = company.getLocation();
+        }
+
         schedule.update(
+                company,
+                companyName,
+                companyLocation,
                 scheduleUpdateRequest.getDueDate(),
                 scheduleUpdateRequest.getMemo(),
                 scheduleUpdateRequest.getPosition(),

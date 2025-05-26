@@ -7,7 +7,7 @@ import java.util.Arrays;
 @Getter
 public enum Step {
     DOCUMENT("서류"),
-    CODING_TEST("코딩테스트"),
+    CODING_TEST("코딩 테스트"),
     ASSIGNMENT_TEST("과제 테스트"),
     FIRST_INTERVIEW("1차 면접"),
     SECOND_INTERVIEW("2차 면접"),
