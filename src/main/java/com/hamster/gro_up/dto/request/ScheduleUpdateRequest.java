@@ -17,7 +17,9 @@ public class ScheduleUpdateRequest {
     @NotBlank
     private String companyName;
 
-    private String companyLocation;
+    private String address;
+
+    private String addressDetail;
 
     private Step step;
 

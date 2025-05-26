@@ -32,14 +32,16 @@ public class Schedule extends BaseEntity {
 
     private String companyName;
 
-    private String companyLocation;
+    private String address;
+
+    private String addressDetail;
 
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT), updatable = false, nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Builder
-    public Schedule(Long id, Step step, String position, LocalDateTime dueDate, String memo, Company company, String companyName, String companyLocation, User user) {
+    public Schedule(Long id, Step step, String position, LocalDateTime dueDate, String memo, Company company, String companyName, String address, String addressDetail, User user) {
         this.id = id;
         this.step = step;
         this.dueDate = dueDate;
@@ -47,14 +49,16 @@ public class Schedule extends BaseEntity {
         this.memo = memo;
         this.company = company;
         this.companyName = companyName;
-        this.companyLocation = companyLocation;
+        this.address = address;
+        this.addressDetail = addressDetail;
         this.user = user;
     }
 
-    public void update(Company company, String companyName, String companyLocation, LocalDateTime dueDate, String memo, String position, Step step) {
+    public void update(Company company, String companyName, String address, String addressDetail, LocalDateTime dueDate, String memo, String position, Step step) {
         this.company = company;
         this.companyName = companyName;
-        this.companyLocation = companyLocation;
+        this.address = address;
+        this.addressDetail = addressDetail;
         this.dueDate = dueDate;
         this.memo = memo;
         this.position = position;

@@ -21,26 +21,30 @@ public class Company extends BaseEntity {
 
     private String url;
 
-    private String location;
+    private String address;
+
+    private String addressDetail;
 
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(value = ConstraintMode.NO_CONSTRAINT), updatable = false, nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     @Builder
-    public Company(Long id, String companyName, String position, String url, String location, User user) {
+    public Company(Long id, String companyName, String position, String url, String address, String addressDetail, User user) {
         this.id = id;
         this.companyName = companyName;
         this.position = position;
         this.url = url;
-        this.location = location;
+        this.address = address;
+        this.addressDetail = addressDetail;
         this.user = user;
     }
 
-    public void update(String companyName, String position, String location, String url) {
+    public void update(String companyName, String position, String address, String addressDetail, String url) {
         this.companyName = companyName;
         this.position = position;
-        this.location = location;
+        this.address = address;
+        this.addressDetail = addressDetail;
         this.url = url;
     }
 

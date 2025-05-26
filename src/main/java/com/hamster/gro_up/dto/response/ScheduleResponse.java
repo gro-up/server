@@ -16,7 +16,9 @@ public class ScheduleResponse {
 
     private String companyName;
 
-    private String companyLocation;
+    private String address;
+
+    private String addressDetail;
 
     private String step;
 
@@ -37,7 +39,8 @@ public class ScheduleResponse {
                 schedule.getId(),
                 companyId,
                 schedule.getCompanyName(),
-                schedule.getCompanyLocation(),
+                schedule.getAddress(),
+                schedule.getAddressDetail(),
                 schedule.getStep().getDisplayName(),
                 schedule.getPosition(),
                 schedule.getMemo(),
