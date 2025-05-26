@@ -51,7 +51,10 @@ public class Schedule extends BaseEntity {
         this.user = user;
     }
 
-    public void update(LocalDateTime dueDate, String memo, String position, Step step) {
+    public void update(Company company, String companyName, String companyLocation, LocalDateTime dueDate, String memo, String position, Step step) {
+        this.company = company;
+        this.companyName = companyName;
+        this.companyLocation = companyLocation;
         this.dueDate = dueDate;
         this.memo = memo;
         this.position = position;
