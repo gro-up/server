@@ -73,7 +73,8 @@ class ScheduleServiceTest {
                 .user(user)
                 .companyName("ham-corp")
                 .position("back-end")
-                .location("seoul")
+                .address("seoul")
+                .addressDetail("상세주소")
                 .url("www.ham.com")
                 .build();
 
@@ -82,6 +83,8 @@ class ScheduleServiceTest {
                 .user(user)
                 .company(company)
                 .companyName(company.getCompanyName())
+                .address(company.getAddress())
+                .addressDetail(company.getAddressDetail())
                 .dueDate(LocalDateTime.of(2025, 5, 11, 12, 0))
                 .step(Step.DOCUMENT)
                 .position("백엔드")
@@ -177,7 +180,8 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
-                company.getLocation(),
+                company.getAddress(),
+                company.getAddressDetail(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -207,7 +211,8 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
-                company.getLocation(),
+                company.getAddress(),
+                company.getAddressDetail(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -228,7 +233,8 @@ class ScheduleServiceTest {
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
                 null,
                 "test-corp",
-                "test-location",
+                "test-address",
+                "test-addressDetail",
                 Step.DOCUMENT,
                 LocalDateTime.of(2025, 6, 12, 10, 0),
                 "프론트엔드",
@@ -242,7 +248,7 @@ class ScheduleServiceTest {
         // then
         assertThat(schedule.getCompany()).isNull();
         assertThat(schedule.getCompanyName()).isEqualTo(updateRequest.getCompanyName());
-        assertThat(schedule.getCompanyLocation()).isEqualTo(updateRequest.getCompanyLocation());
+        assertThat(schedule.getAddress()).isEqualTo(updateRequest.getAddress());
         assertThat(schedule.getDueDate()).isEqualTo(updateRequest.getDueDate());
         assertThat(schedule.getMemo()).isEqualTo(updateRequest.getMemo());
         assertThat(schedule.getPosition()).isEqualTo(updateRequest.getPosition());
@@ -257,7 +263,8 @@ class ScheduleServiceTest {
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
                 null,
                 "test-corp",
-                "test-location",
+                "test-address",
+                "test-addressDetail",
                 Step.DOCUMENT,
                 LocalDateTime.now(),
                 "백엔드",
