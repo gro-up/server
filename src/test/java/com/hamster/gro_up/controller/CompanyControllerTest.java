@@ -62,7 +62,14 @@ class CompanyControllerTest {
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findCompany_success() throws Exception {
         // given
-        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
+        CompanyResponse response = new CompanyResponse(10L,
+                "ham-corp",
+                "back-end",
+                "www.ham.com",
+                "seoul",
+                "상세주소",
+                LocalDateTime.now(),
+                LocalDateTime.now());
         given(companyService.findCompany(any(), eq(10L))).willReturn(response);
 
         // when & then
@@ -79,8 +86,16 @@ class CompanyControllerTest {
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void createCompany_success() throws Exception {
         // given
-        CompanyCreateRequest request = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul");
-        CompanyResponse response = new CompanyResponse(10L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
+        CompanyCreateRequest request = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul", "상세주소");
+        CompanyResponse response = new CompanyResponse(
+                10L,
+                "ham-corp",
+                "back-end",
+                "www.ham.com",
+                "seoul",
+                "상세주소",
+                LocalDateTime.now(),
+                LocalDateTime.now());
         given(companyService.createCompany(any(), any())).willReturn(response);
 
         // when & then
@@ -99,7 +114,13 @@ class CompanyControllerTest {
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void updateCompany_success() throws Exception {
         // given
-        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "www.new.com", "busan");
+        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest(
+                "new-corp",
+                "front-end",
+                "www.new.com",
+                "busan",
+                "상세주소"
+        );
         willDoNothing().given(companyService).updateCompany(any(), eq(10L), any());
 
         // when & then
@@ -141,8 +162,25 @@ class CompanyControllerTest {
     @WithMockAuthUser(userId = 1L, email = "ham@example.com", role = Role.ROLE_USER)
     void findAllCompanies_success() throws Exception {
         // given
-        CompanyResponse company1 = new CompanyResponse(1L, "ham-corp", "back-end", "www.ham.com", "seoul", LocalDateTime.now(), LocalDateTime.now());
-        CompanyResponse company2 = new CompanyResponse(2L, "egg-corp", "front-end", "www.egg.com", "busan", LocalDateTime.now(), LocalDateTime.now());
+        CompanyResponse company1 = new CompanyResponse(
+                1L,
+                "ham-corp",
+                "back-end",
+                "www.ham.com",
+                "seoul",
+                "상세주소",
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+        CompanyResponse company2 = new CompanyResponse(
+                2L,
+                "egg-corp",
+                "front-end",
+                "www.egg.com",
+                "busan",
+                "상세주소",
+                LocalDateTime.now(),
+                LocalDateTime.now());
         CompanyListResponse companyListResponse = CompanyListResponse.of(List.of(company1, company2));
         given(companyService.findAllCompanies(any())).willReturn(companyListResponse);
 
@@ -182,9 +220,10 @@ class CompanyControllerTest {
         // given
         CompanyCreateRequest invalidRequest = new CompanyCreateRequest(
                 "",
-                "",
-                "",
-                ""
+                "back-end",
+                "ham-corp.test",
+                "주소",
+                "상세주소"
         );
 
         // when & then

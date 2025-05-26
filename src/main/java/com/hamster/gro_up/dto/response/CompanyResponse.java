@@ -18,7 +18,9 @@ public class CompanyResponse {
 
     private String url;
 
-    private String location;
+    private String address;
+
+    private String addressDetail;
 
     private LocalDateTime createdAt;
 
@@ -30,7 +32,8 @@ public class CompanyResponse {
                 company.getCompanyName(),
                 company.getPosition(),
                 company.getUrl(),
-                company.getLocation(),
+                company.getAddress(),
+                company.getAddressDetail(),
                 company.getCreatedAt(),
                 company.getModifiedAt()
         );
