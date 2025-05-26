@@ -18,7 +18,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Tag(name = "일정", description = "일정 관련 API")
 @RequiredArgsConstructor
@@ -54,7 +53,7 @@ public class ScheduleController {
     @PutMapping("/{scheduleId}")
     public ResponseEntity<ApiResponse<Void>> updateSchedule(@AuthenticationPrincipal AuthUser authUser,
                                                             @PathVariable Long scheduleId,
-                                                            @RequestBody ScheduleUpdateRequest scheduleUpdateRequest) {
+                                                            @Valid @RequestBody ScheduleUpdateRequest scheduleUpdateRequest) {
         scheduleService.updateSchedule(authUser, scheduleId, scheduleUpdateRequest);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

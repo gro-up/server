@@ -1,6 +1,8 @@
 package com.hamster.gro_up.dto.request;
 
 import com.hamster.gro_up.entity.Step;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -10,8 +12,18 @@ import java.time.LocalDateTime;
 @Getter
 public class ScheduleUpdateRequest {
 
+    private Long companyId;
+
+    @NotBlank
+    private String companyName;
+
+    private String address;
+
+    private String addressDetail;
+
     private Step step;
 
+    @NotNull
     private LocalDateTime dueDate;
 
     private String position;

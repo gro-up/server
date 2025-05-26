@@ -52,19 +52,21 @@ public class ScheduleService {
     public ScheduleResponse createSchedule(AuthUser authUser, ScheduleCreateRequest request) {
         Company company = null;
         String companyName;
-        String companyLocation;
+        String address;
+        String addressDetail;
 
-        if(request.getCompanyId() != null) {
-            company = companyRepository.findById(request.getCompanyId())
-                    .orElseThrow(CompanyNotFoundException::new);
+        if (request.getCompanyId() != null) {
+            company = companyRepository.findById(request.getCompanyId()).orElseThrow(CompanyNotFoundException::new);
 
             company.validateOwner(authUser.getId());
 
             companyName = company.getCompanyName();
-            companyLocation = company.getLocation();
-        }else {
+            address = company.getAddress();
+            addressDetail = company.getAddressDetail();
+        } else {
             companyName = request.getCompanyName();
-            companyLocation = request.getCompanyLocation();
+            address = request.getAddress();
+            addressDetail = request.getAddressDetail();
         }
 
         User user = userRepository.findById(authUser.getId()).orElseThrow(UserNotFoundException::new);
@@ -73,7 +75,8 @@ public class ScheduleService {
                 .user(user)
                 .company(company)
                 .companyName(companyName)
-                .companyLocation(companyLocation)
+                .address(address)
+                .addressDetail(addressDetail)
                 .dueDate(request.getDueDate())
                 .step(request.getStep())
                 .position(request.getPosition())
@@ -91,7 +94,27 @@ public class ScheduleService {
 
         schedule.validateOwner(authUser.getId());
 
+        Company company = null;
+        Long companyId = scheduleUpdateRequest.getCompanyId();
+        String companyName = scheduleUpdateRequest.getCompanyName();
+        String address = scheduleUpdateRequest.getAddress();
+        String addressDetail = scheduleUpdateRequest.getAddressDetail();
+
+        if (companyId != null) {
+            company = companyRepository.findById(companyId).orElseThrow(CompanyNotFoundException::new);
+
+            company.validateOwner(authUser.getId());
+
+            companyName = company.getCompanyName();
+            address = company.getAddress();
+            addressDetail = company.getAddressDetail();
+        }
+
         schedule.update(
+                company,
+                companyName,
+                address,
+                addressDetail,
                 scheduleUpdateRequest.getDueDate(),
                 scheduleUpdateRequest.getMemo(),
                 scheduleUpdateRequest.getPosition(),

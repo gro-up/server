@@ -73,7 +73,8 @@ class ScheduleServiceTest {
                 .user(user)
                 .companyName("ham-corp")
                 .position("back-end")
-                .location("seoul")
+                .address("seoul")
+                .addressDetail("상세주소")
                 .url("www.ham.com")
                 .build();
 
@@ -82,6 +83,8 @@ class ScheduleServiceTest {
                 .user(user)
                 .company(company)
                 .companyName(company.getCompanyName())
+                .address(company.getAddress())
+                .addressDetail(company.getAddressDetail())
                 .dueDate(LocalDateTime.of(2025, 5, 11, 12, 0))
                 .step(Step.DOCUMENT)
                 .position("백엔드")
@@ -177,7 +180,8 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
-                company.getLocation(),
+                company.getAddress(),
+                company.getAddressDetail(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -207,7 +211,8 @@ class ScheduleServiceTest {
         ScheduleCreateRequest request = new ScheduleCreateRequest(
                 company.getId(),
                 company.getCompanyName(),
-                company.getLocation(),
+                company.getAddress(),
+                company.getAddressDetail(),
                 schedule.getStep(),
                 schedule.getDueDate(),
                 schedule.getPosition(),
@@ -222,14 +227,18 @@ class ScheduleServiceTest {
     }
 
     @Test
-    @DisplayName("일정 수정에 성공한다")
+    @DisplayName("companyId 가 없는 일정 수정에 성공한다")
     void updateSchedule_success() {
         // given
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
+                null,
+                "test-corp",
+                "test-address",
+                "test-addressDetail",
                 Step.DOCUMENT,
                 LocalDateTime.of(2025, 6, 12, 10, 0),
-                "수정된 메모",
-                "프론트엔드"
+                "프론트엔드",
+                "수정된 메모"
         );
         given(scheduleRepository.findById(schedule.getId())).willReturn(Optional.of(schedule));
 
@@ -237,6 +246,9 @@ class ScheduleServiceTest {
         scheduleService.updateSchedule(authUser, schedule.getId(), updateRequest);
 
         // then
+        assertThat(schedule.getCompany()).isNull();
+        assertThat(schedule.getCompanyName()).isEqualTo(updateRequest.getCompanyName());
+        assertThat(schedule.getAddress()).isEqualTo(updateRequest.getAddress());
         assertThat(schedule.getDueDate()).isEqualTo(updateRequest.getDueDate());
         assertThat(schedule.getMemo()).isEqualTo(updateRequest.getMemo());
         assertThat(schedule.getPosition()).isEqualTo(updateRequest.getPosition());
@@ -249,7 +261,14 @@ class ScheduleServiceTest {
         // given
         AuthUser otherUser = new AuthUser(2L, "other@gmail.com", Role.ROLE_USER, UserType.LOCAL);
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
-                Step.DOCUMENT, LocalDateTime.now(), "백엔드", "메모 수정"
+                null,
+                "test-corp",
+                "test-address",
+                "test-addressDetail",
+                Step.DOCUMENT,
+                LocalDateTime.now(),
+                "백엔드",
+                "메모 수정"
         );
         given(scheduleRepository.findById(schedule.getId())).willReturn(Optional.of(schedule));
 

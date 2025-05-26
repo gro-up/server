@@ -69,7 +69,7 @@ class CompanyServiceTest {
                 .user(user)
                 .companyName("ham-corp")
                 .position("back-end")
-                .location("seoul")
+                .address("seoul")
                 .url("www.ham.com")
                 .build();
     }
@@ -78,7 +78,7 @@ class CompanyServiceTest {
     @DisplayName("기업 등록에 성공한다")
     void createCompany_success() {
         // given
-        CompanyCreateRequest requestDto = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul");
+        CompanyCreateRequest requestDto = new CompanyCreateRequest("ham-corp", "back-end", "www.ham.com", "seoul", "상세주소");
         given(companyRepository.save(any(Company.class))).willReturn(company);
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
@@ -89,7 +89,7 @@ class CompanyServiceTest {
         assertThat(companyResponse.getCompanyName()).isEqualTo("ham-corp");
         assertThat(companyResponse.getPosition()).isEqualTo("back-end");
         assertThat(companyResponse.getUrl()).isEqualTo("www.ham.com");
-        assertThat(companyResponse.getLocation()).isEqualTo("seoul");
+        assertThat(companyResponse.getAddress()).isEqualTo("seoul");
     }
 
     @Test
@@ -106,7 +106,7 @@ class CompanyServiceTest {
         assertThat(companyResponse.getCompanyName()).isEqualTo("ham-corp");
         assertThat(companyResponse.getPosition()).isEqualTo("back-end");
         assertThat(companyResponse.getUrl()).isEqualTo("www.ham.com");
-        assertThat(companyResponse.getLocation()).isEqualTo("seoul");
+        assertThat(companyResponse.getAddress()).isEqualTo("seoul");
     }
 
     @Test
@@ -127,7 +127,13 @@ class CompanyServiceTest {
     void updateCompany_success() {
         // given
         long companyId = 10L;
-        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "www.new.com", "busan");
+        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest(
+                "new-corp",
+                "front-end",
+                "www.new.com",
+                "busan",
+                "상세주소"
+        );
         given(companyRepository.findById(companyId)).willReturn(Optional.of(company));
 
         // when
@@ -136,7 +142,7 @@ class CompanyServiceTest {
         // then
         assertThat(company.getCompanyName()).isEqualTo("new-corp");
         assertThat(company.getPosition()).isEqualTo("front-end");
-        assertThat(company.getLocation()).isEqualTo("busan");
+        assertThat(company.getAddress()).isEqualTo("busan");
         assertThat(company.getUrl()).isEqualTo("www.new.com");
     }
 
@@ -145,7 +151,13 @@ class CompanyServiceTest {
     void updateCompany_fail_notOwner() {
         // given
         AuthUser otherAuthUser = new AuthUser(2L, "other-user", Role.ROLE_USER, UserType.LOCAL);
-        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest("new-corp", "front-end", "busan", "www.new.com");
+        CompanyUpdateRequest updateRequest = new CompanyUpdateRequest(
+                "new-corp",
+                "front-end",
+                "busan",
+                "www.new.com",
+                "상세주소"
+        );
         given(companyRepository.findById(10L)).willReturn(Optional.of(company));
 
         // when & then
@@ -191,7 +203,7 @@ class CompanyServiceTest {
                 .companyName("ham-corp")
                 .position("back-end")
                 .url("www.ham.com")
-                .location("seoul")
+                .address("seoul")
                 .build();
 
         Company company3 = Company.builder()
@@ -199,7 +211,7 @@ class CompanyServiceTest {
                 .companyName("egg-corp")
                 .position("front-end")
                 .url("www.egg.com")
-                .location("busan")
+                .address("busan")
                 .build();
 
         List<Company> companyList = List.of(company2, company3);

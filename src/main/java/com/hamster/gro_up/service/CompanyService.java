@@ -50,7 +50,8 @@ public class CompanyService {
                 .user(user)
                 .companyName(companyCreateRequest.getCompanyName())
                 .position(companyCreateRequest.getPosition())
-                .location(companyCreateRequest.getLocation())
+                .address(companyCreateRequest.getAddress())
+                .addressDetail(companyCreateRequest.getAddressDetail())
                 .url(companyCreateRequest.getUrl())
                 .build();
 
@@ -67,7 +68,8 @@ public class CompanyService {
 
         company.update(companyUpdateRequest.getCompanyName(),
                 companyUpdateRequest.getPosition(),
-                companyUpdateRequest.getLocation(),
+                companyUpdateRequest.getAddress(),
+                companyUpdateRequest.getAddressDetail(),
                 companyUpdateRequest.getUrl()
         );
     }

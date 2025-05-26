@@ -2,6 +2,7 @@ package com.hamster.gro_up.dto.request;
 
 import com.hamster.gro_up.entity.Step;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -16,10 +17,13 @@ public class ScheduleCreateRequest {
     @NotBlank
     private String companyName;
 
-    private String companyLocation;
+    private String address;
+
+    private String addressDetail;
 
     private Step step;
 
+    @NotNull
     private LocalDateTime dueDate;
 
     private String position;
