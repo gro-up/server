@@ -151,7 +151,7 @@ class ScheduleControllerTest {
     void updateSchedule_success() throws Exception {
         // given
         ScheduleUpdateRequest updateRequest = new ScheduleUpdateRequest(
-                Step.DOCUMENT, LocalDateTime.now(), "프론트엔드", "수정 메모"
+                null, "test-corp", "test-location", Step.DOCUMENT, LocalDateTime.now(), "프론트엔드", "수정 메모"
         );
         willDoNothing().given(scheduleService).updateSchedule(any(), eq(100L), any());
 
