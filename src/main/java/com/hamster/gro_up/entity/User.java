@@ -18,6 +18,8 @@ public class User extends BaseEntity {
 
     private String password;
 
+    private String imageUrl;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -25,10 +27,11 @@ public class User extends BaseEntity {
     private UserType userType;
 
     @Builder
-    public User(Long id, String email, String password, Role role, UserType userType) {
+    public User(Long id, String email, String password, String imageUrl, Role role, UserType userType) {
         this.id = id;
         this.email = email;
         this.password = password;
+        this.imageUrl = imageUrl;
         this.role = role;
         this.userType = userType;
     }
@@ -36,4 +39,6 @@ public class User extends BaseEntity {
     public void updatePassword(String password) {
         this.password = password;
     }
+
+    public void updateImageUrl(String imageUrl) {this.imageUrl = imageUrl;}
 }
