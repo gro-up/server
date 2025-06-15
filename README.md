@@ -11,3 +11,6 @@ Front-end: https://github.com/gro-up/client
 
 ### CI/CD
 ![gro-up_cicd drawio (1)](https://github.com/user-attachments/assets/263208e7-3805-4240-a019-da12636a5e24)
+
+## API 문서 - Swagger
+https://gro-up.shop/swagger-ui/index.html
